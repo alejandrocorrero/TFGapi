@@ -54,6 +54,7 @@
       <path value="$PROJECT_DIR$/api/vendor/fig/link-util" />
       <path value="$PROJECT_DIR$/api/vendor/phpcollection/phpcollection" />
       <path value="$PROJECT_DIR$/api/vendor/sensiolabs/security-checker" />
+      <path value="$PROJECT_DIR$/api/vendor/symfony/apache-pack" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="5.5.0" />

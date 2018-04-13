@@ -25,10 +25,12 @@ security:
 
     access_control:
                   # require ROLE_ADMIN for /admin*
-               - { path: ^/medico, roles: ROLE_MEDICO }
-               - { path: ^/paciente, roles: ROLE_MEDICO}
-               - { path: ^/admin, roles: ROLE_ADMIN}
+               - { path: ^/api/medico, roles: ROLE_MEDICO }
+               - { path: ^/api/paciente, roles: ROLE_PACIENTE}
+               #- { path: ^/admin, roles: ROLE_ADMIN}
             # activate different ways to authenticate
+    role_hierarchy:
+            ROLE_MEDICO:       ROLE_PACIENTE
 
             # https://symfony.com/doc/current/security.html#a-configuring-how-your-users-will-authenticate
             #http_basic: ~

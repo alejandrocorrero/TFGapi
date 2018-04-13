@@ -12,13 +12,13 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 class ApiController extends FOSRestController
 {
     /**
-     * @Route("/api/{id}")
+     * @Route("/admin/{id}")
      */
     public function indexAction($id)
     {
         $entityManager = $this->getDoctrine()->getManager();
         $user = $this->getDoctrine()->getRepository(User::class)->find($id);
-        $user->setRoles( array('ROLE_ADMIN') );
+        $user->setRoles( array('ROLE_PACIENTE') );
         $entityManager->flush();
         $data = array("hello" => "world");
         $view = $this->view($data);
@@ -26,7 +26,7 @@ class ApiController extends FOSRestController
     }
 
     /**
-     * @Route("/prueba")
+     * @Route("/api/paciente/prueba22")
      */
     public function indexAction2()
     {
@@ -53,15 +53,17 @@ class ApiController extends FOSRestController
 
     }
     /**
-     * @Route("/paciente/prueba3")
+     * @Route("/admin/prueba3")
      */
     public function indexAction4()
     {
-
+        if ($this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException();
+        } else {
             $data = array("hello" => "world");
             $view = $this->view($data);
             return $this->handleView($view);
-
+        }
 
     }
 }

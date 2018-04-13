@@ -43,6 +43,7 @@
       <excludeFolder url="file://$MODULE_DIR$/api/vendor/sensio/generator-bundle" />
       <excludeFolder url="file://$MODULE_DIR$/api/vendor/sensiolabs/security-checker" />
       <excludeFolder url="file://$MODULE_DIR$/api/vendor/swiftmailer/swiftmailer" />
+      <excludeFolder url="file://$MODULE_DIR$/api/vendor/symfony/apache-pack" />
       <excludeFolder url="file://$MODULE_DIR$/api/vendor/symfony/monolog-bundle" />
       <excludeFolder url="file://$MODULE_DIR$/api/vendor/symfony/phpunit-bridge" />
       <excludeFolder url="file://$MODULE_DIR$/api/vendor/symfony/polyfill-apcu" />
