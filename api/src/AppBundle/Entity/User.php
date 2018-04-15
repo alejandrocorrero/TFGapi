@@ -89,7 +89,7 @@ class User extends BaseUser
      */
     private $notas;
     /**
-     * @ORM\Column(type="string", length=255, nullable=true, name="foto", nullable=true)
+     * @ORM\Column(type="string", length=255,name="foto", nullable=true)
      */
     public $path;
 

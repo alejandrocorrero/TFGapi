@@ -3,32 +3,32 @@
  * Created by PhpStorm.
  * User: er_al
  * Date: 15/04/2018
- * Time: 2:58
+ * Time: 17:02
  */
 
 namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 /**
- * Paciente
+ * consultas
  *
- * @ORM\Table("pacientes")
+ * @ORM\Table("consultas_medicos")
  * @ORM\Entity
  */
-class Paciente
+class ConsultaMedico
 {
     /**
      * @var integer
      * @ORM\Id
-     * @ORM\Column(name="id_usuario")
-     * @ORM\OneToOne(targetEntity="User")
+     * @ORM\Column(name="id_consulta")
+     * @ORM\OneToOne(targetEntity="Consulta")
      * @ORM\JoinColumn(nullable=false)
      */
-    protected $id;
+    protected $idConsulta;
     /**
      * @var integer
      *
      * @ORM\Column(name="id_medico")
-     * @ORM\OneToOne(targetEntity="Medico")
+     * @ORM\ManyToOne(targetEntity="Medico")
      * @ORM\JoinColumn(nullable=false)
      */
     protected $idMedico;
@@ -36,17 +36,17 @@ class Paciente
     /**
      * @return int
      */
-    public function getId()
+    public function getIdConsulta()
     {
-        return $this->id;
+        return $this->idConsulta;
     }
 
     /**
-     * @param int $id
+     * @param int $idConsulta
      */
-    public function setId($id)
+    public function setIdConsulta($idConsulta)
     {
-        $this->id = $id;
+        $this->idConsulta = $idConsulta;
     }
 
     /**

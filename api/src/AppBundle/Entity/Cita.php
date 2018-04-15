@@ -3,18 +3,18 @@
  * Created by PhpStorm.
  * User: er_al
  * Date: 15/04/2018
- * Time: 1:26
+ * Time: 14:00
  */
 
 namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 /**
- * Medico
+ * Cita
  *
- * @ORM\Table("horarios")
+ * @ORM\Table("citas")
  * @ORM\Entity
  */
-class Horario
+class Cita
 {
     /**
      * @var integer
@@ -24,26 +24,30 @@ class Horario
      * @ORM\GeneratedValue(strategy="AUTO")
      */
     protected $id;
-
     /**
+     * @var integer
+     *
      * @ORM\Column(name="id_medico")
      * @ORM\ManyToOne(targetEntity="Medico")
-     * @ORM\JoinColumn(nullable=true)
+     * @ORM\JoinColumn(nullable=false)
      */
     protected $idMedico;
-
     /**
-     * @ORM\Column(type="string", columnDefinition="ENUM('Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo')")
+     * @var integer
+     *
+     * @ORM\Column(name="id_paciente")
+     * @ORM\ManyToOne(targetEntity="Paciente")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    protected $idPaciente;
+    /**
+     * @ORM\Column(type="date")
      */
     protected $dia;
     /**
-     * @ORM\Column(type="time", name="hora_inicio")
+     * @ORM\Column(type="time")
      */
-    protected $horaInicio;
-    /**
-     * @ORM\Column(type="time", name="hora_fin")
-     */
-    protected $horaFin;
+    protected $hora;
 
     /**
      * @return int
@@ -62,7 +66,7 @@ class Horario
     }
 
     /**
-     * @return mixed
+     * @return int
      */
     public function getIdMedico()
     {
@@ -70,11 +74,27 @@ class Horario
     }
 
     /**
-     * @param mixed $idMedico
+     * @param int $idMedico
      */
     public function setIdMedico($idMedico)
     {
         $this->idMedico = $idMedico;
+    }
+
+    /**
+     * @return int
+     */
+    public function getIdPaciente()
+    {
+        return $this->idPaciente;
+    }
+
+    /**
+     * @param int $idPaciente
+     */
+    public function setIdPaciente($idPaciente)
+    {
+        $this->idPaciente = $idPaciente;
     }
 
     /**
@@ -96,34 +116,19 @@ class Horario
     /**
      * @return mixed
      */
-    public function getHoraInicio()
+    public function getHora()
     {
-        return $this->horaInicio;
+        return $this->hora;
     }
 
     /**
-     * @param mixed $horaInicio
+     * @param mixed $hora
      */
-    public function setHoraInicio($horaInicio)
+    public function setHora($hora)
     {
-        $this->horaInicio = $horaInicio;
+        $this->hora = $hora;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getHoraFin()
-    {
-        return $this->horaFin;
-    }
-
-    /**
-     * @param mixed $horaFin
-     */
-    public function setHoraFin($horaFin)
-    {
-        $this->horaFin = $horaFin;
-    }
 
 
 }
