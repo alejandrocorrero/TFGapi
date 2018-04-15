@@ -20,6 +20,7 @@ security:
             fos_oauth: true                            # OAuth2 protected resource
             stateless: true                            # Do no set session cookies
             anonymous: false
+            security: false
         main:
             anonymous: ~
 
