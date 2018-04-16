@@ -27,7 +27,7 @@ class RespuestaPacienteConsulta
     protected $idRespuesta;
     /**
      * @var integer
-     *
+     * @ORM\Id
      * @ORM\Column(name="id_consulta")
      * @ORM\ManyToOne(targetEntity="Consulta")
      * @ORM\JoinColumn(nullable=false)
@@ -35,7 +35,7 @@ class RespuestaPacienteConsulta
     protected $idConsulta;
     /**
      * @var integer
-     *
+     * @ORM\Id
      * @ORM\Column(name="id_paciente")
      * @ORM\ManyToOne(targetEntity="Paciente")
      * @ORM\JoinColumn(nullable=false)
