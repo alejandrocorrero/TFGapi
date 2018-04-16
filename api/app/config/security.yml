@@ -31,7 +31,7 @@ security:
             # activate different ways to authenticate
     role_hierarchy:
             ROLE_MEDICO:       ROLE_PACIENTE
-
+            ROLE_SUPER_ADMIN:   ROLE_MEDICO
             # https://symfony.com/doc/current/security.html#a-configuring-how-your-users-will-authenticate
             #http_basic: ~
 
