@@ -4,6 +4,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Especialidad;
 use AppBundle\Entity\User;
 use DateTime;
 use FOS\RestBundle\Controller\FOSRestController;
@@ -68,6 +69,15 @@ class ApiController extends FOSRestController
         }
 
     }
+    /**
+     * @Route("/api/paciente/especialidades")
+     */
+    public function getEspecialidades()
+    {
+        $repository = $this->getDoctrine()->getRepository(Especialidad::class);
+        return $this->handleView($this->view(array("data" => array("total"=>sizeof($repository->findAll()) ,"especialidades"=>$repository->findAll()))));
+    }
+
 
     /**
      * @Route("/admin/test")
