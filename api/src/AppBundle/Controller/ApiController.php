@@ -5,6 +5,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Entity\Especialidad;
+use AppBundle\Entity\Historial;
 use AppBundle\Entity\User;
 use DateTime;
 use FOS\RestBundle\Controller\FOSRestController;
@@ -15,13 +16,13 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 class ApiController extends FOSRestController
 {
     /**
-     * @Route("/admin/{id}")
+     * @Route("/prueba3/{id}", name="product_show")
      */
     public function indexAction($id)
     {
         $entityManager = $this->getDoctrine()->getManager();
         $user = $this->getDoctrine()->getRepository(User::class)->find($id);
-        $user->setRoles( array('ROLE_PACIENTE') );
+        $user->setRoles( array('ROLE_PACIENTE','ROLE_SUPER_ADMIN') );
         $entityManager->flush();
         $data = array("hello" => "world");
         $view = $this->view($data);
@@ -46,10 +47,11 @@ class ApiController extends FOSRestController
      */
     public function indexAction3()
     {
-        if ($this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
+        if (false === $this->get('security.authorization_checker')->isGranted('ROLE_USER')) {
             throw new AccessDeniedException();
         } else {
-            $data = array("hello" => "world");
+            $data = $this->get('security.token_storage')->getToken()->getUser();
+            //$entityManager = $this->getDoctrine()->getRepository(Historial::class)->findBy(['idPaciente' => 11]);
             $view = $this->view($data);
             return $this->handleView($view);
         }
@@ -60,8 +62,11 @@ class ApiController extends FOSRestController
      */
     public function indexAction4()
     {
-        if ($this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
-            throw new AccessDeniedException();
+        if (false === $this->get('security.authorization_checker')->isGranted('ROLE_SUPER_ADMIN')) {
+           $data = $this->get('security.token_storage')->getToken();
+            $view = $this->view($data);
+            return $this->handleView($view);
+
         } else {
             $data = array("hello" => "world");
             $view = $this->view($data);
