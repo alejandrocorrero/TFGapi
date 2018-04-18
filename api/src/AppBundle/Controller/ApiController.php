@@ -16,13 +16,27 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 class ApiController extends FOSRestController
 {
     /**
+     * @Route("/api/paciente/getuser")
+     */
+    public function getUser()
+    {
+        if ($this->get('security.authorization_checker')->isGranted('ROLE_MEDICO')) {
+            return $this->handleView($this->view(array("type" => 2, "data" => $this->get('security.token_storage')->getToken()->getUser())));
+            //throw new AccessDeniedException();
+        } else {
+            return $this->handleView($this->view(array("type" => 1, "data" => $this->get('security.token_storage')->getToken()->getUser())));
+        }
+
+    }
+
+    /**
      * @Route("/prueba3/{id}", name="product_show")
      */
     public function indexAction($id)
     {
         $entityManager = $this->getDoctrine()->getManager();
         $user = $this->getDoctrine()->getRepository(User::class)->find($id);
-        $user->setRoles( array('ROLE_PACIENTE','ROLE_SUPER_ADMIN') );
+        $user->setRoles(array('ROLE_PACIENTE', 'ROLE_SUPER_ADMIN'));
         $entityManager->flush();
         $data = array("hello" => "world");
         $view = $this->view($data);
@@ -43,27 +57,12 @@ class ApiController extends FOSRestController
     }
 
     /**
-     * @Route("/prueba3")
-     */
-    public function indexAction3()
-    {
-        if (false === $this->get('security.authorization_checker')->isGranted('ROLE_USER')) {
-            throw new AccessDeniedException();
-        } else {
-            $data = $this->get('security.token_storage')->getToken()->getUser();
-            //$entityManager = $this->getDoctrine()->getRepository(Historial::class)->findBy(['idPaciente' => 11]);
-            $view = $this->view($data);
-            return $this->handleView($view);
-        }
-
-    }
-    /**
      * @Route("/admin/prueba3")
      */
     public function indexAction4()
     {
         if (false === $this->get('security.authorization_checker')->isGranted('ROLE_SUPER_ADMIN')) {
-           $data = $this->get('security.token_storage')->getToken();
+            $data = $this->get('security.token_storage')->getToken();
             $view = $this->view($data);
             return $this->handleView($view);
 
@@ -74,13 +73,14 @@ class ApiController extends FOSRestController
         }
 
     }
+
     /**
      * @Route("/api/paciente/especialidades")
      */
     public function getEspecialidades()
     {
         $repository = $this->getDoctrine()->getRepository(Especialidad::class);
-        return $this->handleView($this->view(array("data" => array("total"=>sizeof($repository->findAll()) ,"especialidades"=>$repository->findAll()))));
+        return $this->handleView($this->view(array("data" => array("total" => sizeof($repository->findAll()), "especialidades" => $repository->findAll()))));
     }
 
 
@@ -94,20 +94,22 @@ class ApiController extends FOSRestController
         $entityManager = $this->getDoctrine()->getManager();
 
         $user = new user();
-        $user->setPlainPassword("adminpassword");
-        $user->setUsername("75918243G");
-        $user->setUsernameCanonical("75918243g");
+        $user->setPlainPassword("1234");
+        $user->setUsername("12345678G");
+        $user->setUsernameCanonical("12345678G");
         $user->setNombre("test");
         $user->setApellido("test");
         $user->setSuperAdmin(true);
         $user->setDireccion("test");
-        $user->setFechaNacimiento( (new \DateTime)->setDate( 1995 ,06 , 16 ));
+        $user->setFechaNacimiento((new \DateTime)->setDate(1995, 06, 16));
         $user->setTelefono(123456789);
         $user->setMovil(61626261);
         $user->setPais("ESPAÑA");
         $user->setSexo("Hombre");
-        $user->setEmail("test");
-        $user->setEmailCanonical("test");
+        $user->setEmail("test23");
+        $user->setEmailCanonical("test23");
+        $user->setEnabled(true);
+        $user->setRoles((array('ROLE_PACIENTE')));
         // tell Doctrine you want to (eventually) save the Product (no queries yet)
         $entityManager->persist($user);
 

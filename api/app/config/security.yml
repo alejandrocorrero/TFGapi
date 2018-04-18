@@ -27,7 +27,7 @@ security:
                   # require ROLE_ADMIN for /admin*
                - { path: ^/api/medico, roles: ROLE_MEDICO }
                - { path: ^/api/paciente, roles: ROLE_PACIENTE}
-               - { path: ^/admin, roles: ROLE_ADMIN}
+               - { path: ^/admin, roles: ROLE_SUPER_ADMIN }
             # activate different ways to authenticate
     role_hierarchy:
             ROLE_MEDICO:       ROLE_PACIENTE
