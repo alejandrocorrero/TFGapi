@@ -4,6 +4,8 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Cita;
+use AppBundle\Entity\EnfermedadesCronicas;
 use AppBundle\Entity\Especialidad;
 use AppBundle\Entity\Historial;
 use AppBundle\Entity\User;
@@ -16,44 +18,121 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 class ApiController extends FOSRestController
 {
     /**
-     * @Route("/api/paciente/getuser")
+     * @Route("/api/patient/user")
      */
     public function getUser()
     {
         if ($this->get('security.authorization_checker')->isGranted('ROLE_MEDICO')) {
-            return $this->handleView($this->view(array("type" => 2, "data" => $this->get('security.token_storage')->getToken()->getUser())));
+            return $this->handleView($this->view(array("status" => 200,"message"=>"","type" => 2, "data" => $this->get('security.token_storage')->getToken()->getUser())));
             //throw new AccessDeniedException();
         } else {
-            return $this->handleView($this->view(array("type" => 1, "data" => $this->get('security.token_storage')->getToken()->getUser())));
+            $conn = $this->getDoctrine()->getConnection();
+            $sql = 'SELECT u.id,u.nombre,u.apellido,u.email,u.direccion,u.fecha_nacimiento,u.telefono,u.movil,u.pais_nacimiento,u.sexo,u.estado_civil,u.ocupacion,u.notas,u.foto,CONCAT(u2.nombre," " ,u2.apellido)as nombre_medico, u2.id as id_medico FROM usuarios u inner join pacientes p on u.id=p.id_usuario inner join usuarios u2 on p.id_medico=u2.id WHERE u.id=:id';
+            $stmt = $conn->prepare($sql);
+            $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+            return $this->handleView($this->view(array("status" => 200,"message"=>"", "type" => 1, "data" => $stmt->fetch())));        }
+
+    }
+
+    /**
+     * @Route("/api/patient/historical/{id}", name="show_historical")
+     * @param $id
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getHistorical($id)
+    {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT h.id,h.causa,h.notas,h.fecha,CONCAT(u.nombre," " ,u.apellido)as nombre_medico FROM historial h inner join pacientes p on h.id_paciente=p.id_usuario inner join usuarios u on h.id_medico=u.id WHERE p.id_usuario=:id and h.id=:idhistorical';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId(),'idhistorical' => $id]);
+        return $this->handleView($this->view(array("status" => 200,"message"=>"", "type" => 1, "data" => $stmt->fetch())));
+
+    }
+    /**
+     * @Route("/api/patient/historical")
+     */
+    public function getHistoricals()
+    {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT h.id,h.causa,h.notas,h.fecha,CONCAT(u.nombre," " ,u.apellido)as nombre_medico FROM historial h inner join pacientes p on h.id_paciente=p.id_usuario inner join usuarios u on h.id_medico=u.id WHERE p.id_usuario=:id';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+        return $this->handleView($this->view(array("status" => 200,"message"=>"", "type" => 1, "data" => $stmt->fetchall())));
+
+    }
+    /**
+     * @Route("/api/patient/recipes")
+     */
+    public function getRecipes()
+    {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT r.* FROM recetas r inner join historial h on r.id_historial=h.id inner join pacientes p on h.id_paciente=p.id_usuario WHERE p.id_usuario=:id';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+
+        if ($stmt->fetchall()==null) {
+            return $this->handleView($this->view(array("status" => 404,"message"=>"No hay recetas", "type" => 1, "data" =>[])));
+
         }
 
+        return $this->handleView($this->view(array("status" => 200,"message"=>"", "type" => 1, "data" =>$stmt->fetchall())));
+
     }
 
+
     /**
-     * @Route("/prueba3/{id}", name="product_show")
+     * @Route("/api/pacient/getchronic")
      */
-    public function indexAction($id)
+    public function getChronic()
     {
+        $id=$this->get('security.token_storage')->getToken()->getUser()->getId();
         $entityManager = $this->getDoctrine()->getManager();
-        $user = $this->getDoctrine()->getRepository(User::class)->find($id);
-        $user->setRoles(array('ROLE_PACIENTE', 'ROLE_SUPER_ADMIN'));
-        $entityManager->flush();
-        $data = array("hello" => "world");
-        $view = $this->view($data);
-        return $this->handleView($view);
+        $chronic = $entityManager->getRepository(EnfermedadesCronicas::class)->findBy(['idPaciente' => $id]);
+
+        if (!$chronic) {
+            return $this->handleView($this->view(array("status" => 404,"message"=>"No existe", "type" => 1, "data" =>[])));
+
+        }
+
+        return $this->handleView($this->view(array("status" => 200,"message"=>"", "type" => 1, "data" =>$chronic)));
+
     }
 
     /**
-     * @Route("/api/paciente/prueba22")
+     * @Route("/api/patient/citations")
+     */
+    public function getCitations()
+    {
+        $id=$this->get('security.token_storage')->getToken()->getUser()->getId();
+        $entityManager = $this->getDoctrine()->getManager();
+        $chronic = $entityManager->getRepository(Cita::class)->findBy(['idPaciente' => $id]);
+
+        if (!$chronic) {
+            return $this->handleView($this->view(array("status" => 404,"message"=>"No existe", "type" => 1, "data" =>[])));
+
+        }
+
+        return $this->handleView($this->view(array("status" => 200,"message"=>"", "type" => 1, "data" =>$chronic)));
+
+    }
+
+    /**
+     * @Route("/api/pacient/prueba22")
      */
     public function indexAction2()
     {
-        //$repository = $this->getDoctrine()->getRepository(User::class)->findAll();
-        $user = $this->get('security.token_storage')->getToken();
-        $view = $this->view($user);
-        return $this->handleView($view);
-        // Do something with the fully authenticated user.
-        // ...
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT u.id,u.nombre,u.apellido,u.email,u.direccion,u.fecha_nacimiento,u.telefono,u.movil,u.pais_nacimiento,u.sexo,u.estado_civil,u.ocupacion,u.notas,u.foto,CONCAT(u2.nombre," " ,u2.apellido)as nombre_medico, u2.id as id_medico FROM usuarios u inner join pacientes p on u.id=p.id_usuario inner join usuarios u2 on p.id_medico=u2.id WHERE u.id=:id';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+        return $this->handleView($this->view(array("status" => 200,"message"=>"", "type" => 1, "data" => $stmt->fetchall())));
+
+        // returns an array of arrays (i.e. a raw data set)
+
     }
 
     /**
