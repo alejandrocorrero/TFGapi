@@ -18,7 +18,7 @@ class Medico
      * @ORM\Id
      * @ORM\Column(name="id_usuario")
      * @ORM\OneToOne(targetEntity="User")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=false, onDelete="CASCADE")
      */
     protected $id;
     /**
