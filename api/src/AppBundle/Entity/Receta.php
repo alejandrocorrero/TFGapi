@@ -25,6 +25,11 @@ class Receta
      * @ORM\GeneratedValue(strategy="AUTO")
      */
     protected $id;
+
+    /**
+     * @ORM\Column(type="string", length=100)
+     */
+    protected $nombre;
     /**
      * @ORM\Column(type="string", length=100)
      */

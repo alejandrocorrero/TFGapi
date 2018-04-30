@@ -5,6 +5,9 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Entity\Cita;
+use AppBundle\Entity\Consulta;
+use AppBundle\Entity\ConsultaEspecialidad;
+use AppBundle\Entity\ConsultaMedico;
 use AppBundle\Entity\EnfermedadesCronicas;
 use AppBundle\Entity\Especialidad;
 use AppBundle\Entity\Historial;
@@ -20,6 +23,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Symfony\Component\Validator\Constraints\Date;
 
 class ApiController extends FOSRestController
 {
@@ -64,7 +68,7 @@ class ApiController extends FOSRestController
     {
         $conn = $this->getDoctrine()->getConnection();
 
-        $sql = 'SELECT h.id,h.causa,h.notas,h.fecha,CONCAT(u.nombre," " ,u.apellido)as nombre_medico FROM historial h inner join pacientes p on h.id_paciente=p.id_usuario inner join usuarios u on h.id_medico=u.id WHERE p.id_usuario=:id';
+        $sql = 'SELECT h.id,h.causa,h.notas,h.fecha,CONCAT(u.nombre," " ,u.apellido)as nombre_medico, c.nombre as centro_salud,c.direccion as direccion_centro FROM historial h inner join pacientes p on h.id_paciente=p.id_usuario inner join usuarios u on h.id_medico=u.id inner join medicos m on m.id_usuario=u.id inner join centros c on c.id=m.id_centro WHERE p.id_usuario=:id';
         $stmt = $conn->prepare($sql);
         $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
         return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchall())));
@@ -91,9 +95,32 @@ class ApiController extends FOSRestController
 
     }
 
+    /**
+     * @Route("/api/patient/recipeshistorical/{id}")
+     * @param $id
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getRecipesHistorical($id)
+    {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT r.* FROM recetas r inner join historial h on r.id_historial=h.id inner join pacientes p on h.id_paciente=p.id_usuario WHERE p.id_usuario=:id HAVING r.id_historial=:id_historial';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId(), 'id_historial' => $id]);
+        $array = $stmt->fetchall();
+        if ($array == null) {
+            return $this->templateJson(404, "No hay recetas", 1,"")->setStatusCode(404);
+
+        }
+
+
+        return $this->templateJson(200, "", 1,$array)->setStatusCode(200);
+
+    }
+
 
     /**
-     * @Route("/api/pacient/getchronic")
+     * @Route("/api/patient/chronic")
      */
     public function getChronic()
     {
@@ -143,17 +170,169 @@ class ApiController extends FOSRestController
      * @param Request $request
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function setConsult(Request $request)
+    public function setConsultSpecialty(Request $request)
     {
-        $description= $request->get("description");
-        $idspeciality= $request->get("id_speciality");
-
-        // returns an array of arrays (i.e. a raw data set)
+        $entityManager = $this->getDoctrine()->getManager();
+        $description = $request->get("description");
+        $idspeciality = $request->get("id_speciality");
+        $attached = $request->get("attached");
         if (null === $description) {
-            return $this->handleView($this->view(array("status" => 404, "message" => "Fallo en el parametro", "type" => 1, "data" => "")));
+            return $this->templateJson(404, "Parameter id_specialty is needed", 1, "");
         }
-        return $this->handleView($this->view(array("status" => 200,"message"=>"", "type" => 1, "data" => $description)));
+        if (null === $idspeciality) {
+            return $this->templateJson(404, "Parameter id_specialty is needed", 1, "");
+        }
+        $consult = new Consulta();
+        $consult->setDescripcion($description);
+        $consult->setFecha(DateTime::createFromFormat("Y-m-d H:i:s", date("Y-m-d H:i:s")));
+        $consult->setIdPaciente($this->get('security.token_storage')->getToken()->getUser()->getId());
+        $entityManager->persist($consult);
+        $entityManager->flush();
+
+        $consultSpecialty = new ConsultaEspecialidad();
+        $consultSpecialty->setIdConsulta($consult->getId());
+        $consultSpecialty->setIdEspecialidad($idspeciality);
+        $entityManager->persist($consultSpecialty);
+        $entityManager->flush();
+
+        return $this->templateJson(201, "Created", 1, $consult->getId())->setStatusCode(201);
     }
+
+    /**
+     * @Route("/api/patient/create_consult_medic")
+     * @Method("POST")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function setConsultMedic(Request $request)
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $description = $request->get("description");
+        $idmedic = $request->get("id_medic");
+        $attached = $request->get("attached");
+        if (null === $description) {
+            return $this->templateJson(404, "Parameter id_specialty is needed", 1, "");
+        }
+        if (null === $idmedic) {
+            return $this->templateJson(404, "Parameter id_medic is needed", 1, "");
+        }
+        $consult = new Consulta();
+        $consult->setDescripcion($description);
+        $consult->setFecha(DateTime::createFromFormat("Y-m-d H:i:s", date("Y-m-d H:i:s")));
+        $consult->setIdPaciente($this->get('security.token_storage')->getToken()->getUser()->getId());
+
+        $entityManager->persist($consult);
+        $entityManager->flush();
+
+        $consultMedic = new ConsultaMedico();
+        $consultMedic->setIdConsulta($consult->getId());
+        $consultMedic->setIdMedico($idmedic);
+        $entityManager->persist($consultMedic);
+        $entityManager->flush();
+
+        return $this->templateJson(201, "Created", 1, $consult->getId())->setStatusCode(201);
+    }
+
+    /**
+     * @Route("/api/patient/consults_medic")
+     */
+    public function getConsultsMedic()
+    {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT c.*,cm.id_medico FROM consultas c inner join consultas_medicos cm on c.id=cm.id_consulta WHERE c.id_paciente=:id';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchAll())));
+    }
+
+    /**
+     * @Route("/api/patient/consults_specialty")
+     */
+    public function getConsultsSpeacialty()
+    {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT c.*,ce.id_especialidad FROM consultas c inner join consultas_especialidades ce on c.id=ce.id_consulta WHERE c.id_paciente=:id';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchAll())));
+    }
+
+    /**
+     * @Route("/api/patient/consults_medic/{id}")
+     * @param $id
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getConsultMedic($id)
+    {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT c.*,cm.id_medico FROM consultas c inner join consultas_medicos cm on c.id=cm.id_consulta WHERE c.id_paciente=:id and c.id=:id_consult';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId(), 'id_consult' => $id]);
+        $sql2 = 'SELECT r.*,CONCAT(p.nombre ," ", p.apellido) as paciente_nombre,CONCAT(m.nombre ," ", m.apellido) as medico_nombre from respuestas r LEFT join respuestas_paciente_consulta rpc on rpc.id_respuesta=r.id LEFT join respuestas_medico_consulta rmc on rmc.id_respuesta=r.id LEFT join usuarios m on rmc.id_medico=m.id LEFT join usuarios p on rpc.id_paciente=p.id where rmc.id_consulta=:id_consulta or rpc.id_consulta=:id_consulta order by r.fecha';
+        $stmt2 = $conn->prepare($sql2);
+        $stmt2->execute(['id_consulta' => $id]);
+        return $this->templateJson(200, "", 1, array("consult" => $stmt->fetch(), "responses" => $stmt2->fetchAll()))->setStatusCode(200);
+    }
+
+    /**
+     * @Route("/api/patient/consults_specialty/{id}")
+     * @param $id
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getConsultSpecialty($id)
+    {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT c.*,ce.id_especialidad FROM consultas c inner join consultas_especialidades ce on c.id=ce.id_consulta WHERE c.id_paciente=:id and c.id=:id_consult';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId(), 'id_consult' => $id]);
+        $sql2 = 'SELECT r.*,CONCAT(p.nombre ," ", p.apellido) as paciente_nombre,CONCAT(m.nombre ," ", m.apellido) as medico_nombre from respuestas r LEFT join respuestas_paciente_consulta rpc on rpc.id_respuesta=r.id LEFT join respuestas_medico_consulta rmc on rmc.id_respuesta=r.id LEFT join usuarios m on rmc.id_medico=m.id LEFT join usuarios p on rpc.id_paciente=p.id where rmc.id_consulta=:id_consulta or rpc.id_consulta=:id_consulta order by r.fecha';
+        $stmt2 = $conn->prepare($sql2);
+        $stmt2->execute(['id_consulta' => $id]);
+        return $this->templateJson(200, "", 1, array("consult" => $stmt->fetch(), "responses" => $stmt2->fetchAll()))->setStatusCode(200);
+    }
+
+
+    /**
+     * @Route("/api/medic/create_econsult")
+     * @Method("POST")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function setEConsult(Request $request)
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $description = $request->get("description");
+        $idmedic = $request->get("id_medic");
+        $attached = $request->get("attached");
+        if (null === $description) {
+            return $this->templateJson(404, "Parameter id_specialty is needed", 1, "");
+        }
+        if (null === $idmedic) {
+            return $this->templateJson(404, "Parameter id_medic is needed", 1, "");
+        }
+        $consult = new Consulta();
+        $consult->setDescripcion($description);
+        $consult->setFecha(DateTime::createFromFormat("Y-m-d H:i:s", date("Y-m-d H:i:s")));
+        $consult->setIdPaciente($this->get('security.token_storage')->getToken()->getUser()->getId());
+
+        $entityManager->persist($consult);
+        $entityManager->flush();
+
+        $consultMedic = new ConsultaMedico();
+        $consultMedic->setIdConsulta($consult->getId());
+        $consultMedic->setIdMedico($idmedic);
+        $entityManager->persist($consultMedic);
+        $entityManager->flush();
+
+        return $this->templateJson(201, "Created", 1, $consult->getId())->setStatusCode(201);
+    }
+
 
     /**
      * @Route("/admin/prueba3")
@@ -236,5 +415,17 @@ class ApiController extends FOSRestController
     public function edit($id)
     {
         // ... edit a post
+    }
+
+    /**
+     * @param $status
+     * @param $message
+     * @param $type
+     * @param $data
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function templateJson($status, $message, $type, $data)
+    {
+        return $this->handleView($this->view(array("status" => $status, "message" => $message, "type" => $type, "data" => $data)));
     }
 }
