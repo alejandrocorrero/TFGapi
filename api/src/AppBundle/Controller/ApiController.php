@@ -142,16 +142,12 @@ class ApiController extends FOSRestController
      */
     public function getCitations()
     {
-        $id = $this->get('security.token_storage')->getToken()->getUser()->getId();
-        $entityManager = $this->getDoctrine()->getManager();
-        $chronic = $entityManager->getRepository(Cita::class)->findBy(['idPaciente' => $id]);
+        $conn = $this->getDoctrine()->getConnection();
 
-        if (!$chronic) {
-            return $this->handleView($this->view(array("status" => 404, "message" => "No existe", "type" => 1, "data" => [])));
-
-        }
-
-        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $chronic)));
+        $sql = 'SELECT c.*,CONCAT(u.nombre," " ,u.apellido)as nombre_medico, ce.nombre as centro FROM citas c join usuarios u on c.id_medico= u.id  join medicos m on m.id_usuario=c.id_medico JOIN centros ce on ce.id = m.id_centro WHERE c.dia>=CURRENT_DATE and c.id_paciente=:id';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchall())));
 
     }
 
