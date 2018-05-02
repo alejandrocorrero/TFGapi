@@ -4,6 +4,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Adjunto;
 use AppBundle\Entity\Cita;
 use AppBundle\Entity\Consulta;
 use AppBundle\Entity\ConsultaEspecialidad;
@@ -16,6 +17,7 @@ use AppBundle\Entity\User;
 use DateTime;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\Controller\Annotations\Route;
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\BrowserKit\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -329,6 +331,39 @@ class ApiController extends FOSRestController
         return $this->templateJson(201, "Created", 1, $consult->getId())->setStatusCode(201);
     }
 
+    /**
+     * @Route("api/patient/adjunto/new", name="app_adjunto_new")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse|\Symfony\Component\HttpFoundation\Response
+     */
+    public function new(Request $request)
+    {
+        $product = new Adjunto();
+        $tipos= array("jpeg","jpg","png","tiff","bmp","raw","nef");
+        $file = $request->files->get('file');
+        if($file==null){
+            return $this->templateJson(400,"El archivo no puede estar vacio",1,"")->setStatusCode(400);
+        }
+        if(!in_array($file->guessExtension(),$tipos)){
+            return $this->templateJson(404,"El archivo tiene que ser de tipo imagen",1,"")->setStatusCode(404);
+        }
+
+        $fileName = md5(uniqid()) . '.' . $file->guessExtension();
+        $file->move($this->getParameter('adjuntos_directory'), $fileName);
+        $product->setPath($fileName);
+        $product->setFecha((new \DateTime)->setDate(1995, 06, 16));
+        $product->setTamanio($file->getClientSize());
+        $em = $this->getDoctrine()->getManager();
+        $em->persist($product);
+        $em->flush();
+        $path =new File($this->getParameter('adjuntos_directory').'/'.$product->getPath());
+        return $this->templateJson(201,"Creado",1, $product)->setStatusCode(201);
+
+
+
+
+    }
+
 
     /**
      * @Route("/admin/prueba3")
@@ -404,6 +439,7 @@ class ApiController extends FOSRestController
         $view = $this->view($data);
         return $this->handleView($view);
     }
+
 
     /**
      * @Route("/prueba", methods="POST")

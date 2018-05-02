@@ -2,7 +2,7 @@
 # https://symfony.com/doc/current/service_container.html
 parameters:
     #parameter_name: value
-
+    adjuntos_directory: '%kernel.project_dir%/public/uploads/adjuntos'
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -33,3 +33,6 @@ services:
     # AppBundle\Service\ExampleService:
     #     arguments:
     #         $someArgument: 'some_value'
+    AppBundle\Service\FileUploader:
+        arguments:
+            $targetDirectory: '%adjuntos_directory%'

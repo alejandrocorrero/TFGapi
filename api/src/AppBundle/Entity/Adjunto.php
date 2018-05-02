@@ -7,14 +7,15 @@
  */
 
 namespace AppBundle\Entity;
+
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 /**
  * Adjunto
  *
  * @ORM\Table("adjuntos")
  * @ORM\Entity
  */
-
 class Adjunto
 {
     /**
@@ -30,12 +31,13 @@ class Adjunto
      */
     protected $fecha;
     /**
-     * @ORM\Column(type="time", name="tamaño")
+     * @ORM\Column(type="integer", name="tamanio")
      */
     protected $tam;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true, name="adjunto")
+     * @Assert\File(mimeTypes={ "image/jpeg", "image/jpg", "image/png" })
      */
     private $path;
 
@@ -72,17 +74,17 @@ class Adjunto
     }
 
     /**
-     * @return mixed
+     * @return int
      */
-    public function getTam()
+    public function getTamanio()
     {
         return $this->tam;
     }
 
     /**
-     * @param mixed $tam
+     * @param int $tam
      */
-    public function setTam($tam)
+    public function setTamanio($tam)
     {
         $this->tam = $tam;
     }

@@ -1,0 +1,7 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<a href="<?php echo $view['assets']->getUrl('uploads/adjuntos/'.$product->getBrochure()) ?>">
+    View brochure (PDF)
+</a>
+{% endblock %}
