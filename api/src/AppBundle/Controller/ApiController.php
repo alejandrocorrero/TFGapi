@@ -296,6 +296,7 @@ class ApiController extends FOSRestController
     }
 
 
+    // TODO ARREGLAR
     /**
      * @Route("/api/medic/create_econsult")
      * @Method("POST")
@@ -330,6 +331,7 @@ class ApiController extends FOSRestController
 
         return $this->templateJson(201, "Created", 1, $consult->getId())->setStatusCode(201);
     }
+    //TODO AÑADIR ARRAYD E ARCHIVOS A CONSULTA
 
     /**
      * @Route("api/patient/adjunto/new", name="app_adjunto_new")
@@ -356,7 +358,6 @@ class ApiController extends FOSRestController
         $em = $this->getDoctrine()->getManager();
         $em->persist($product);
         $em->flush();
-        $path =new File($this->getParameter('adjuntos_directory').'/'.$product->getPath());
         return $this->templateJson(201,"Creado",1, $product)->setStatusCode(201);
 
 
