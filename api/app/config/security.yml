@@ -15,6 +15,7 @@ security:
         oauth_token:                                   # Everyone can access the access token URL.
                 pattern: ^/oauth/v2/token
                 security: false
+
         api:
             pattern: ^/                                # All URLs are protected
             fos_oauth: true                            # OAuth2 protected resource

@@ -29,10 +29,10 @@ class AdjuntoEconsulta
      * @var integer
      *
      * @ORM\Column(name="id_econsulta")
-     * @ORM\ManyToOne(targetEntity="Econsultas")
+     * @ORM\ManyToOne(targetEntity="Econsulta")
      * @ORM\JoinColumn(nullable=false)
      */
-    protected $idEconsultas;
+    protected $idEconsulta;
 
     /**
      * @return int
@@ -53,17 +53,17 @@ class AdjuntoEconsulta
     /**
      * @return int
      */
-    public function getIdEconsultas()
+    public function getIdEconsulta()
     {
-        return $this->idEconsultas;
+        return $this->idEconsulta;
     }
 
     /**
-     * @param int $idEconsultas
+     * @param int $idEconsulta
      */
-    public function setIdEconsultas($idEconsultas)
+    public function setIdEconsulta($idEconsulta)
     {
-        $this->idEconsultas = $idEconsultas;
+        $this->idEconsulta = $idEconsulta;
     }
 
 

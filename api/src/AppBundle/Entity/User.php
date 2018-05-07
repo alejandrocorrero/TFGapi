@@ -6,6 +6,7 @@ namespace AppBundle\Entity;
 use FOS\UserBundle\Model\User as BaseUser;
 use Doctrine\ORM\Mapping as ORM;
 
+use Symfony\Component\Validator\Constraints as Assert;
 /**
  * User
  *
@@ -89,7 +90,8 @@ class User extends BaseUser
      */
     private $notas;
     /**
-     * @ORM\Column(type="string", length=255,name="foto", nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, name="foto")
+     * @Assert\File(mimeTypes={ "image/jpeg", "image/jpg", "image/png" })
      */
     public $path;
 

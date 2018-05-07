@@ -8,11 +8,14 @@
 
 namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Doctrine\ORM\Mapping\UniqueConstraint;
 /**
  * Cita
  *
- * @ORM\Table("citas")
+ * @ORM\Table(name="citas",uniqueConstraints={@UniqueConstraint(name="citas", columns={"dia", "hora"})})
  * @ORM\Entity
+ * @UniqueEntity(fields={"idPaciente", "dia", "hora"},errorPath="idPaciente",message="ERROR_CITA_DUPLICATE")
  */
 class Cita
 {

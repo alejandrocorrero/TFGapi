@@ -9,12 +9,12 @@
 namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 /**
- * AdjuntoConsultas
+ * AdjuntoPaciente
  *
- * @ORM\Table("adjuntos_consultas")
+ * @ORM\Table("adjuntos_pacientes")
  * @ORM\Entity
  */
-class AdjuntoConsulta
+class AdjuntoPaciente
 {
     /**
      * @var integer
@@ -28,16 +28,16 @@ class AdjuntoConsulta
     /**
      * @var integer
      *
-     * @ORM\Column(name="id_Consulta")
-     * @ORM\ManyToOne(targetEntity="Consulta")
+     * @ORM\Column(name="id_paciente")
+     * @ORM\ManyToOne(targetEntity="Paciente")
      * @ORM\JoinColumn(nullable=false)
      */
-    protected $idConsultas;
+    protected $idPaciente;
 
     /**
      * @return int
      */
-    public function getIdAdjunto()
+    public function getIdAdjunto(): int
     {
         return $this->idAdjunto;
     }
@@ -45,7 +45,7 @@ class AdjuntoConsulta
     /**
      * @param int $idAdjunto
      */
-    public function setIdAdjunto($idAdjunto)
+    public function setIdAdjunto(int $idAdjunto)
     {
         $this->idAdjunto = $idAdjunto;
     }
@@ -53,18 +53,19 @@ class AdjuntoConsulta
     /**
      * @return int
      */
-    public function getIdConsulta()
+    public function getIdPaciente(): int
     {
-        return $this->idConsulta;
+        return $this->idPaciente;
     }
 
     /**
-     * @param int $idConsulta
+     * @param int $idPaciente
      */
-    public function setIdConsulta($idConsulta)
+    public function setIdPaciente(int $idPaciente)
     {
-        $this->idConsulta = $idConsulta;
+        $this->idPaciente = $idPaciente;
     }
+
 
 
 

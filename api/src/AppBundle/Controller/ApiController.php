@@ -5,6 +5,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Entity\Adjunto;
+use AppBundle\Entity\AdjuntoConsulta;
 use AppBundle\Entity\Cita;
 use AppBundle\Entity\Consulta;
 use AppBundle\Entity\ConsultaEspecialidad;
@@ -13,6 +14,7 @@ use AppBundle\Entity\EnfermedadesCronicas;
 use AppBundle\Entity\Especialidad;
 use AppBundle\Entity\Historial;
 use AppBundle\Entity\Medico;
+use AppBundle\Entity\Paciente;
 use AppBundle\Entity\User;
 use DateTime;
 use FOS\RestBundle\Controller\FOSRestController;
@@ -84,16 +86,16 @@ class ApiController extends FOSRestController
     {
         $conn = $this->getDoctrine()->getConnection();
 
-        $sql = 'SELECT r.* FROM recetas r inner join historial h on r.id_historial=h.id inner join pacientes p on h.id_paciente=p.id_usuario WHERE p.id_usuario=:id';
+        $sql = 'SELECT r.* FROM recetas r inner join historial h on r.id_historial=h.id inner join pacientes p on h.id_paciente=p.id_usuario WHERE p.id_usuario=:id and DATE_ADD(r.fecha, INTERVAL r.duracion DAY)>CURRENT_DATE';
         $stmt = $conn->prepare($sql);
         $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
-
-        if ($stmt->fetchall() == null) {
+        $result = $stmt->fetchall();
+        if ($result == null) {
             return $this->handleView($this->view(array("status" => 404, "message" => "No hay recetas", "type" => 1, "data" => [])));
 
         }
 
-        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchall())));
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $result)));
 
     }
 
@@ -111,12 +113,12 @@ class ApiController extends FOSRestController
         $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId(), 'id_historial' => $id]);
         $array = $stmt->fetchall();
         if ($array == null) {
-            return $this->templateJson(404, "No hay recetas", 1,"")->setStatusCode(404);
+            return $this->templateJson(404, "No hay recetas", 1, "")->setStatusCode(404);
 
         }
 
 
-        return $this->templateJson(200, "", 1,$array)->setStatusCode(200);
+        return $this->templateJson(200, "", 1, $array)->setStatusCode(200);
 
     }
 
@@ -149,6 +151,39 @@ class ApiController extends FOSRestController
         $sql = 'SELECT c.*,CONCAT(u.nombre," " ,u.apellido)as nombre_medico, ce.nombre as centro FROM citas c join usuarios u on c.id_medico= u.id  join medicos m on m.id_usuario=c.id_medico JOIN centros ce on ce.id = m.id_centro WHERE c.dia>=CURRENT_DATE and c.id_paciente=:id';
         $stmt = $conn->prepare($sql);
         $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchall())));
+
+    }
+
+    /**
+     * @Route("/api/patient/citationsmedic")
+     */
+    public function getCitationsMedic()
+    {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT c.dia,c.hora FROM citas c WHERE c.id_medico=:id';
+        $stmt = $conn->prepare($sql);
+        $entityManager = $this->getDoctrine()->getManager();
+        $patient = $entityManager->getRepository(Paciente::class)->findOneBy(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+
+        $stmt->execute(['id' => $patient->getIdMedico()]);
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchall())));
+
+    }
+
+    /**
+     * @Route("/api/patient/medichorary")
+     */
+    public function getMedicHorary()
+    {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT h.dia,h.hora_inicio,h.hora_fin FROM horarios h WHERE h.id_medico=:id';
+        $stmt = $conn->prepare($sql);
+        $entityManager = $this->getDoctrine()->getManager();
+        $patient = $entityManager->getRepository(Paciente::class)->findOneBy(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+        $stmt->execute(['id' => $patient->getIdMedico()]);
         return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchall())));
 
     }
@@ -246,6 +281,20 @@ class ApiController extends FOSRestController
     }
 
     /**
+     * @Route("/api/patient/attachments")
+     */
+    public function getAdjuntos()
+    {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT a.id,a.fecha,a.tamanio,a.adjunto FROM adjuntos a LEFT join adjuntos_consultas ac on a.id=ac.id_adjunto LEFT join adjuntos_econsultas ae on a.id=ae.id_adjunto where ac.id_adjunto is null and ae.id_econsulta is null';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchAll())));
+    }
+
+    /**
      * @Route("/api/patient/consults_specialty")
      */
     public function getConsultsSpeacialty()
@@ -297,6 +346,7 @@ class ApiController extends FOSRestController
 
 
     // TODO ARREGLAR
+
     /**
      * @Route("/api/medic/create_econsult")
      * @Method("POST")
@@ -341,38 +391,74 @@ class ApiController extends FOSRestController
     public function new(Request $request)
     {
         $product = new Adjunto();
-        $tipos= array("jpeg","jpg","png","tiff","bmp","raw","nef");
+        $adjuntoc = new AdjuntoConsulta();
+        $tipos = array("jpeg", "jpg", "png", "tiff", "bmp", "raw", "nef");
         $file = $request->files->get('file');
-        if($file==null){
-            return $this->templateJson(400,"El archivo no puede estar vacio",1,"")->setStatusCode(400);
+        if ($file == null) {
+            return $this->templateJson(400, "El archivo no puede estar vacio", 1, "")->setStatusCode(400);
         }
-        if(!in_array($file->guessExtension(),$tipos)){
-            return $this->templateJson(404,"El archivo tiene que ser de tipo imagen",1,"")->setStatusCode(404);
+        if (!in_array($file->guessExtension(), $tipos)) {
+            return $this->templateJson(404, "El archivo tiene que ser de tipo imagen", 1, "")->setStatusCode(404);
         }
 
         $fileName = md5(uniqid()) . '.' . $file->guessExtension();
         $file->move($this->getParameter('adjuntos_directory'), $fileName);
         $product->setPath($fileName);
-        $product->setFecha((new \DateTime)->setDate(1995, 06, 16));
+        $product->setFecha((DateTime::createFromFormat("Y-m-d H:i:s", date("Y-m-d H:i:s"))));
         $product->setTamanio($file->getClientSize());
+
         $em = $this->getDoctrine()->getManager();
         $em->persist($product);
         $em->flush();
-        return $this->templateJson(201,"Creado",1, $product)->setStatusCode(201);
-
-
+        $adjuntoc->setIdAdjunto($product->getId());
+        $adjuntoc->setIdConsultas(6);
+        $em->persist($adjuntoc);
+        $em->flush();
+        return $this->templateJson(201, "Creado", 1, $product)->setStatusCode(201);
 
 
     }
 
+    /**
+     * @Route("api/patient/foto", name="app_foto_new")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse|\Symfony\Component\HttpFoundation\Response
+     */
+    public function newFoto(Request $request)
+    {
+        $product = $this->get('security.token_storage')->getToken()->getUser();
+
+        $tipos = array("jpeg", "jpg", "png", "tiff", "bmp", "raw", "nef");
+        $file = $request->files->get('file');
+        if ($file == null) {
+            return $this->templateJson(400, "El archivo no puede estar vacio", 1, "")->setStatusCode(400);
+        }
+        if (!in_array($file->guessExtension(), $tipos)) {
+            return $this->templateJson(404, "El archivo tiene que ser de tipo imagen", 1, "")->setStatusCode(404);
+        }
+
+        $fileName = md5(uniqid()) . '.' . $file->guessExtension();
+        $file->move($this->getParameter('adjuntos_directory'), $fileName);
+        $product->setPath($fileName);
+        //$product->setFecha((DateTime::createFromFormat("Y-m-d H:i:s", date("Y-m-d H:i:s"))));
+        //$product->setTamanio($file->getClientSize());
+        $em = $this->getDoctrine()->getManager();
+        $em->persist($product);
+        $em->flush();
+        return $this->templateJson(201, "Creado", 1, $product)->setStatusCode(201);
+
+
+    }
 
     /**
-     * @Route("/admin/prueba3")
+     * @Route("/api/patient/logout")
      */
     public function indexAction4()
     {
+        $data = $this->get('security.token_storage')->setToken(null);
+        $this->get('security.token_storage')->getToken()->invalidate();
         if (false === $this->get('security.authorization_checker')->isGranted('ROLE_SUPER_ADMIN')) {
-            $data = $this->get('security.token_storage')->getToken();
+            $data =
             $view = $this->view($data);
             return $this->handleView($view);
 
