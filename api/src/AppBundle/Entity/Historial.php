@@ -7,7 +7,9 @@
  */
 
 namespace AppBundle\Entity;
+
 use Doctrine\ORM\Mapping as ORM;
+
 /**
  * Receta
  *
@@ -43,12 +45,17 @@ class Historial
      */
     protected $idPaciente;
     /**
-     * @ORM\Column(type="string", length=1000)
+     * @ORM\Column(type="text")
      */
     protected $causa;
     /**
-     * @ORM\Column(type="string", length=1000)
+     * @ORM\Column(type="text")
      */
+    protected $diagnostico;
+    /**
+     * @ORM\Column(type="text")
+     */
+
     protected $notas;
 
     /**
@@ -152,6 +159,21 @@ class Historial
         $this->fecha = $fecha;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getDiagnostico()
+    {
+        return $this->diagnostico;
+    }
+
+    /**
+     * @param mixed $diagnostico
+     */
+    public function setDiagnostico($diagnostico)
+    {
+        $this->diagnostico = $diagnostico;
+    }
 
 
 }
