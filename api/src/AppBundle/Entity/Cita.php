@@ -13,9 +13,9 @@ use Doctrine\ORM\Mapping\UniqueConstraint;
 /**
  * Cita
  *
- * @ORM\Table(name="citas",uniqueConstraints={@UniqueConstraint(name="citas", columns={"dia", "hora"})})
+ * @ORM\Table(name="citas",uniqueConstraints={@UniqueConstraint(name="citas", columns={"dia", "hora","id_medico"})})
  * @ORM\Entity
- * @UniqueEntity(fields={"idPaciente", "dia", "hora"},errorPath="idPaciente",message="ERROR_CITA_DUPLICATE")
+ * @UniqueEntity(fields={"idPaciente", "dia", "hora"},errorPath="idPaciente",message="CITA EN USO")
  */
 class Cita
 {

@@ -40,7 +40,10 @@ class Adjunto
      * @Assert\File(mimeTypes={ "image/jpeg", "image/jpg", "image/png" })
      */
     private $path;
-
+    /**
+     * @ORM\Column(type="string", length=100)
+     */
+    protected $nombre;
     /**
      * @return int
      */
@@ -103,6 +106,38 @@ class Adjunto
     public function setPath($path)
     {
         $this->path = $path;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTam()
+    {
+        return $this->tam;
+    }
+
+    /**
+     * @param mixed $tam
+     */
+    public function setTam($tam)
+    {
+        $this->tam = $tam;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getNombre()
+    {
+        return $this->nombre;
+    }
+
+    /**
+     * @param mixed $nombre
+     */
+    public function setNombre($nombre)
+    {
+        $this->nombre = $nombre;
     }
 
 
