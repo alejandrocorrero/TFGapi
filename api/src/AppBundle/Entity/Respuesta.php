@@ -7,14 +7,15 @@
  */
 
 namespace AppBundle\Entity;
+
 use Doctrine\ORM\Mapping as ORM;
+
 /**
  * Respuestas
  *
  * @ORM\Table("respuestas")
  * @ORM\Entity
  */
-
 class Respuesta
 {
     /**
@@ -33,6 +34,12 @@ class Respuesta
      * @ORM\Column(type="string", length=10000)
      */
     protected $respuesta;
+
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    protected $leido;
 
     /**
      * @return int
@@ -80,6 +87,22 @@ class Respuesta
     public function setRespuesta($respuesta)
     {
         $this->respuesta = $respuesta;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLeido()
+    {
+        return $this->leido;
+    }
+
+    /**
+     * @param mixed $leido
+     */
+    public function setLeido($leido)
+    {
+        $this->leido = $leido;
     }
 
 

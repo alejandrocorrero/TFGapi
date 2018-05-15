@@ -32,7 +32,7 @@ class AdjuntoConsulta
      * @ORM\ManyToOne(targetEntity="Consulta")
      * @ORM\JoinColumn(nullable=false)
      */
-    protected $idConsultas;
+    protected $idConsulta;
 
     /**
      * @return int
