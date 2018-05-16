@@ -281,7 +281,7 @@ class ApiController extends FOSRestController
 
             }
         }
-        return $this->templateJson(201, "Consult medic created", 1, $consult->getId())->setStatusCode(201);
+        return $this->templateJson(201, "Consult medic created", 1,"")->setStatusCode(201);
     }
 
     private function crearAdjuntoConsulta(File $file,int $id)
