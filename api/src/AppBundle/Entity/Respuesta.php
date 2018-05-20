@@ -31,7 +31,7 @@ class Respuesta
      */
     protected $fecha;
     /**
-     * @ORM\Column(type="string", length=10000)
+     * @ORM\Column(type="text")
      */
     protected $respuesta;
 

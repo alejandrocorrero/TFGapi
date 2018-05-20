@@ -3,21 +3,19 @@
  * Created by PhpStorm.
  * User: er_al
  * Date: 15/04/2018
- * Time: 2:44
+ * Time: 2:58
  */
 
 namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 /**
- * Especialidad
+ * Sexo
  *
- * @ORM\Table("especialidades")
+ * @ORM\Table("sexos")
  * @ORM\Entity
  */
-
-class Especialidad
+class Sexo
 {
-
     /**
      * @var integer
      *
@@ -26,10 +24,11 @@ class Especialidad
      * @ORM\GeneratedValue(strategy="AUTO")
      */
     protected $id;
+
     /**
-     * @ORM\Column(type="string", length=200)
+     * @ORM\Column(type="string", length=100, unique=true)
      */
-    protected $nombre;
+    private $nombre;
 
     /**
      * @return int
@@ -62,6 +61,7 @@ class Especialidad
     {
         $this->nombre = $nombre;
     }
+
 
 
 }

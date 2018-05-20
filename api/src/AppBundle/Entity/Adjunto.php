@@ -36,7 +36,7 @@ class Adjunto
     protected $tam;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true, name="adjunto")
+     * @ORM\Column(type="string", length=255, nullable=true, name="adjunto", unique=true)
      * @Assert\File(mimeTypes={ "image/jpeg", "image/jpg", "image/png" })
      */
     private $path;

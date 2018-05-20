@@ -67,17 +67,26 @@ class User extends BaseUser
     private $movil;
 
     /**
-     * @ORM\Column(type="string", name="pais_nacimiento")
+     * @var integer
+     * @ORM\Column(name="id_pais")
+     * @ORM\OneToOne(targetEntity="Pais")
+     * @ORM\JoinColumn(nullable=false)
      */
     private $pais;
 
     /**
-     * @ORM\Column(type="string", length=10)
+     * @var integer
+     * @ORM\Column(name="id_sexo")
+     * @ORM\OneToOne(targetEntity="Sexo")
+     * @ORM\JoinColumn(nullable=false)
      */
     private $sexo;
 
     /**
-     * @ORM\Column(type="string", length=10, name="estado_civil", nullable=true)
+     * @var integer
+     * @ORM\Column(name="id_estado_civil")
+     * @ORM\OneToOne(targetEntity="Pais")
+     * @ORM\JoinColumn(nullable=true)
      */
     private $estadoCivil;
 
@@ -86,7 +95,7 @@ class User extends BaseUser
      */
     private $ocupacion;
     /**
-     * @ORM\Column(type="string", length=1000, nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
     private $notas;
     /**
