@@ -30,7 +30,10 @@ class Centro
      * @ORM\Column(type="string", length=250)
      */
     protected $direccion;
-
+    /**
+     * @ORM\Column(type="string", length=250)
+     */
+    protected $ciudad;
     /**
      * @ORM\Column(type="string", length=15)
      */
@@ -98,6 +101,22 @@ class Centro
     public function setTelefono($telefono)
     {
         $this->telefono = $telefono;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCiudad()
+    {
+        return $this->ciudad;
+    }
+
+    /**
+     * @param mixed $ciudad
+     */
+    public function setCiudad($ciudad)
+    {
+        $this->ciudad = $ciudad;
     }
 
 
