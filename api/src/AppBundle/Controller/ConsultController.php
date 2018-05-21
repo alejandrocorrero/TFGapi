@@ -169,10 +169,10 @@ class ConsultController extends FOSRestController
     /**
      * @Route("/api/patient/consults")
      */
-    public function getConsultsMedic()
+    public function getConsults()
     {
         $conn = $this->getDoctrine()->getConnection();
-        $sql = 'SELECT c.*,Concat(u.nombre,\' \',u.apellido) nombre,Concat(u2.nombre,\' \',u2.apellido) nombre_medico,r.fecha fecharespuesta,r.respuesta,r.leido FROM consultas c 
+        $sql = 'SELECT c.*,Concat(u.nombre,\' \',u.apellido) nombre,Concat(u2.nombre,\' \',u2.apellido) nombre_respuesta,r.fecha fecharespuesta,r.respuesta,r.leido FROM consultas c 
                 inner join usuarios u on u.id =c.id_paciente
                 LEFT join consultas_medicos cm on cm.id_consulta=c.id 
                 LEFT join consultas_especialidades ce on ce.id_consulta=c.id  
@@ -186,6 +186,57 @@ class ConsultController extends FOSRestController
                 ORDER BY greatest (c.fecha  ,ifnull( r.fecha,0)) desc';
         $stmt = $conn->prepare($sql);
         $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchAll())));
+    }
+
+    /**
+     * @Route("/api/medic/consultspatiens")
+     */
+    public function getConsultsPatiens()
+    {
+        $conn = $this->getDoctrine()->getConnection();
+        $sql = 'SELECT c.*,Concat(u.nombre,\' \',u.apellido) nombre,Concat(u2.nombre,\' \',u2.apellido) nombre_respuesta,r.fecha fecharespuesta,r.respuesta,r.leido 
+                FROM consultas c 
+                inner join usuarios u on u.id =c.id_paciente 
+                LEFT join consultas_medicos cm on cm.id_consulta=c.id 
+                LEFT join respuestas_paciente_consulta rpc on rpc.id_consulta=c.id 
+                LEFT join respuestas_medico_consulta rmc on rmc.id_consulta=c.id 
+                left join usuarios u2 on u2.id=rpc.id_paciente 
+                left join (SELECT MAX(r.fecha) fecha , r.respuesta,r.leido,r.id from respuestas as r GROUP by r.id order by fecha desc) as r on rpc.id_respuesta=r.id or rmc.id_respuesta=r.id 
+                where cm.id_medico=:id GROUP by c.id ORDER BY greatest (c.fecha ,ifnull( r.fecha,0)) desc';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchAll())));
+    }
+
+    /**
+     * @Route("/api/medic/consultspecialty")
+     */
+    public function getConsultsSpecialty()
+    {
+        $conn = $this->getDoctrine()->getConnection();
+        $sql = 'SELECT c.*,Concat(u.nombre,\' \',u.apellido) nombre,Concat(u2.nombre,\' \',u2.apellido) nombre_respuesta,r.fecha fecharespuesta,r.respuesta,r.leido   	FROM consultas c 
+				inner join usuarios u on u.id =c.id_paciente
+                LEFT join consultas_especialidades ce on ce.id_consulta=c.id
+                LEFT join respuestas_paciente_consulta rpc on rpc.id_consulta=c.id 
+                LEFT join respuestas_medico_consulta rmc on rmc.id_consulta=c.id
+                left join usuarios u2 on u2.id=rmc.id_medico
+				inner join medicos m on m.id_especialidad=ce.id_especialidad
+                 left join (SELECT MAX(r.fecha) fecha , r.respuesta,r.leido,r.id from respuestas 					
+                 as r GROUP by r.id  order by fecha desc)  as r
+                on rpc.id_respuesta=r.id or rmc.id_respuesta=r.id
+				 where ce.id_especialidad=6
+                 GROUP by c.id  
+                ORDER BY greatest (c.fecha  ,ifnull( r.fecha,0)) desc';
+        $stmt = $conn->prepare($sql);
+        $repository = $this->getDoctrine()->getRepository(Medico::class);
+
+        /** @var $medic Medico */
+        $medic = $repository->findOneBy(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+
+        $stmt->execute(['id' => $medic->getEspecialidad()]);
 
         return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchAll())));
     }
@@ -224,6 +275,7 @@ order by r.fecha desc ";
 
         $sql = 'SELECT c.*,ce.id_especialidad FROM consultas c inner join consultas_especialidades ce on c.id=ce.id_consulta WHERE c.id_paciente=:id';
         $stmt = $conn->prepare($sql);
+
         $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
 
         return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchAll())));
