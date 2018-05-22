@@ -265,7 +265,30 @@ order by r.fecha desc ";
 
         return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => array("Consult" => $consult, "Attachments" => $stmt->fetchall(), "Respuestas" => $stmt2->fetchAll()))));
     }
+    /**
+     * @Route("/api/medic/consults/{id}")
+     * @param $id
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getConsultMedic($id)
+    {  /** @var $consult Consulta */
+        $consult = $this->getDoctrine()->getManager()->getRepository(Consulta::class)->findOneBy(['id' => $id]);
+        $conn = $this->getDoctrine()->getConnection();
+        $sql = "SELECT a.* from adjuntos a inner join adjuntos_consultas ac on ac.id_adjunto=a.id inner join consultas c on c.id=ac.id_Consulta where ac.id_consulta=:p1 and c.id_paciente=:p2 ";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['p1' => $id, 'p2' => $consult->getIdPaciente()]);
+        $sql2 = "SELECT r.*,Concat(u.nombre,' ',u.apellido) nombre from respuestas r
+left join respuestas_paciente_consulta rpc on r.id=rpc.id_respuesta 
+left join respuestas_medico_consulta rmc on r.id=rmc.id_respuesta 
+left join usuarios u on u.id=rmc.id_medico
+left join consultas c on c.id=rmc.id_consulta and c.id=rpc.id_consulta
+where rpc.id_consulta=:p1 or rmc.id_consulta=:p2
+order by r.fecha desc ";
+        $stmt2 = $conn->prepare($sql2);
+        $stmt2->execute(['p1' => $id, 'p2' => $id]);
 
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => array("Consult" => $consult, "Attachments" => $stmt->fetchall(), "Respuestas" => $stmt2->fetchAll()))));
+    }
     /**
      * @Route("/api/patient/consults_specialty")
      */
@@ -281,23 +304,6 @@ order by r.fecha desc ";
         return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchAll())));
     }
 
-    /**
-     * @Route("/api/patient/consults_medic/{id}")
-     * @param $id
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    public function getConsultMedic($id)
-    {
-        $conn = $this->getDoctrine()->getConnection();
-
-        $sql = 'SELECT c.*,cm.id_medico FROM consultas c inner join consultas_medicos cm on c.id=cm.id_consulta WHERE c.id_paciente=:id and c.id=:id_consult';
-        $stmt = $conn->prepare($sql);
-        $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId(), 'id_consult' => $id]);
-        $sql2 = 'SELECT r.*,CONCAT(p.nombre ," ", p.apellido) as paciente_nombre,CONCAT(m.nombre ," ", m.apellido) as medico_nombre from respuestas r LEFT join respuestas_paciente_consulta rpc on rpc.id_respuesta=r.id LEFT join respuestas_medico_consulta rmc on rmc.id_respuesta=r.id LEFT join usuarios m on rmc.id_medico=m.id LEFT join usuarios p on rpc.id_paciente=p.id where rmc.id_consulta=:id_consulta or rpc.id_consulta=:id_consulta order by r.fecha';
-        $stmt2 = $conn->prepare($sql2);
-        $stmt2->execute(['id_consulta' => $id]);
-        return $this->templateJson(200, "", 1, array("consult" => $stmt->fetch(), "responses" => $stmt2->fetchAll()))->setStatusCode(200);
-    }
 
 
     /**
