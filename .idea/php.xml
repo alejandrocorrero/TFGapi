@@ -55,7 +55,8 @@
       <path value="$PROJECT_DIR$/api/vendor/friendsofsymfony/user-bundle" />
       <path value="$PROJECT_DIR$/api/vendor/friendsofsymfony/oauth2-php" />
       <path value="$PROJECT_DIR$/api/vendor/composer" />
+      <path value="$PROJECT_DIR$/api/vendor/symfony/polyfill-ctype" />
     </include_path>
   </component>
-  <component name="PhpProjectSharedConfiguration" php_language_level="5.5.0" />
+  <component name="PhpProjectSharedConfiguration" php_language_level="7.2" />
 </project>

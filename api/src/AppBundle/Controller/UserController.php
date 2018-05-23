@@ -7,6 +7,7 @@
  */
 
 namespace AppBundle\Controller;
+
 use AppBundle\Entity\Adjunto;
 use AppBundle\Entity\AdjuntoConsulta;
 use AppBundle\Entity\AdjuntoPaciente;
@@ -64,6 +65,37 @@ class UserController extends FOSRestController
         }
 
     }
+
+    /**
+     * @Route("/api/medic/users")
+     * @param $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getUsers(Request $request)
+    {
+
+        $filter = $request->get("filter");
+        $sql = 'SELECT u.id,u.username,u.nombre,u.apellido,u.foto FROM usuarios u  INNER join pacientes p on p.id_usuario=u.id ';
+        if ($filter != null) {
+            $query = 'where CONCAT(u.nombre,\' \',u.apellido)LIKE \'%' . $filter . '%\'';
+            $sql = $sql . $query;
+            $conn = $this->getDoctrine()->getConnection();
+
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+        } else {
+            $query = 'where p.id_medico=:id';
+            $sql = $sql . $query;
+            $conn = $this->getDoctrine()->getConnection();
+            $stmt = $conn->prepare($sql);
+            $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+        }
+
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchall())));
+
+
+    }
+
     /**
      * @param $status
      * @param $message
