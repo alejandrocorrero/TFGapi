@@ -67,6 +67,31 @@ class UserController extends FOSRestController
     }
 
     /**
+     * @Route("/api/medic/user/{id}")
+     * @param $id
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getUserMedic($id)
+    {
+
+
+        $conn = $this->getDoctrine()->getConnection();
+        $sql = 'SELECT u.id,u.nombre,u.apellido,u.email,u.direccion,u.fecha_nacimiento,u.telefono,u.movil,pa.nombre as pais_nacimiento,s.nombre as sexo,ec.nombre as estado_civil,u.ocupacion,u.notas,u.foto,CONCAT(u2.nombre," " ,u2.apellido)as nombre_medico, u2.id as id_medico 
+                    FROM usuarios u 
+                    inner join pacientes p on u.id=p.id_usuario 
+                    inner join usuarios u2 on p.id_medico=u2.id 
+                    inner join sexos s on s.id=u.id_sexo 
+                    inner join estados_civiles ec on ec.id=u.id_estado_civil
+                    inner join paises pa on pa.id=u.id_pais 
+                    WHERE u.id=:id';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $id]);
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetch())));
+
+
+    }
+
+    /**
      * @Route("/api/medic/users")
      * @param $request
      * @return \Symfony\Component\HttpFoundation\Response

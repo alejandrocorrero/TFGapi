@@ -22,6 +22,7 @@ use AppBundle\Entity\Medico;
 use AppBundle\Entity\Paciente;
 use AppBundle\Entity\Respuesta;
 use AppBundle\Entity\RespuestaMedicoConsulta;
+use AppBundle\Entity\RespuestaMedicoEconsulta;
 use AppBundle\Entity\RespuestaPacienteConsulta;
 use AppBundle\Entity\User;
 use DateTime;
@@ -85,11 +86,11 @@ class ResponseController extends FOSRestController
     }
 
     /**
-     * @Route("/api/medic/responseconsult")
-     * @Method("POST")
-     * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
+ * @Route("/api/medic/responseconsult")
+ * @Method("POST")
+ * @param Request $request
+ * @return \Symfony\Component\HttpFoundation\Response
+ */
     public function postResponseMedic(Request $request){
         $responseMsg = $request->get("response");
         $idConsult = $request->get("id_consult");
@@ -120,7 +121,42 @@ class ResponseController extends FOSRestController
         return $this->templateJson(201, "Created", 1, $stmt->fetch())->setStatusCode(201);
 
     }
+    /**
+     * @Route("/api/medic/responseeconsult")
+     * @Method("POST")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function postResponseEconsult(Request $request){
+        $responseMsg = $request->get("response");
+        $idEConsult = $request->get("id_econsult");
+        if (null === $responseMsg) {
+            return $this->templateJson(404, "Parameter response is needed", 1, "");
+        }
+        if (null === $idEConsult) {
+            return $this->templateJson(404, "Parameter id_consult is needed", 1, "");
+        }
+        $entityManager = $this->getDoctrine()->getManager();
+        $response = new Respuesta();
+        $response->setFecha((DateTime::createFromFormat("Y-m-d H:i:s", date("Y-m-d H:i:s"))));
+        $response->setLeido(0);
+        $response->setRespuesta($responseMsg);
+        $entityManager->persist($response);
+        $entityManager->flush();
+        $respuestaEconsult= new RespuestaMedicoEconsulta();
+        $respuestaEconsult->setIdRespuesta($response->getId());
+        $respuestaEconsult->setIdEConsulta($idEConsult);
+        $respuestaEconsult->setIdMedico($this->get('security.token_storage')->getToken()->getUser()->getId());
+        $entityManager->persist($respuestaEconsult);
+        $entityManager->flush();
+        $conn = $this->getDoctrine()->getConnection();
+        $sql='Select r.* from respuestas r where r.id=:p1';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['p1' => $response->getId()]);
 
+        return $this->templateJson(201, "Created", 1, $stmt->fetch())->setStatusCode(201);
+
+    }
     /**
      * @param $status
      * @param $message

@@ -32,7 +32,7 @@ class RespuestaMedicoEconsulta
      * @ORM\ManyToOne(targetEntity="Econsulta")
      * @ORM\JoinColumn(nullable=false)
      */
-    protected $idConsulta;
+    protected $idEConsulta;
     /**
      * @var integer
      * @ORM\Id
@@ -61,17 +61,17 @@ class RespuestaMedicoEconsulta
     /**
      * @return int
      */
-    public function getIdConsulta()
+    public function getIdEConsulta()
     {
-        return $this->idConsulta;
+        return $this->idEConsulta;
     }
 
     /**
-     * @param int $idConsulta
+     * @param int $idEConsulta
      */
-    public function setIdConsulta($idConsulta)
+    public function setIdEConsulta($idEConsulta)
     {
-        $this->idConsulta = $idConsulta;
+        $this->idEConsulta = $idEConsulta;
     }
 
     /**

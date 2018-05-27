@@ -227,7 +227,7 @@ class ConsultController extends FOSRestController
                  left join (SELECT MAX(r.fecha) fecha , r.respuesta,r.leido,r.id from respuestas 					
                  as r GROUP by r.id  order by fecha desc)  as r
                 on rpc.id_respuesta=r.id or rmc.id_respuesta=r.id
-				 where ce.id_especialidad=6
+				 where ce.id_especialidad=:p1
                  GROUP by c.id  
                 ORDER BY greatest (c.fecha  ,ifnull( r.fecha,0)) desc';
         $stmt = $conn->prepare($sql);
@@ -236,7 +236,7 @@ class ConsultController extends FOSRestController
         /** @var $medic Medico */
         $medic = $repository->findOneBy(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
 
-        $stmt->execute(['id' => $medic->getEspecialidad()]);
+        $stmt->execute(['p1' => $medic->getEspecialidad()]);
 
         return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchAll())));
     }
@@ -254,12 +254,12 @@ class ConsultController extends FOSRestController
         $stmt = $conn->prepare($sql);
         $stmt->execute(['p1' => $id, 'p2' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
         $sql2 = "SELECT r.*,Concat(u.nombre,' ',u.apellido) nombre from respuestas r
-left join respuestas_paciente_consulta rpc on r.id=rpc.id_respuesta 
-left join respuestas_medico_consulta rmc on r.id=rmc.id_respuesta 
-left join usuarios u on u.id=rmc.id_medico
-left join consultas c on c.id=rmc.id_consulta and c.id=rpc.id_consulta
-where rpc.id_consulta=:p1 or rmc.id_consulta=:p2
-order by r.fecha desc ";
+            left join respuestas_paciente_consulta rpc on r.id=rpc.id_respuesta 
+            left join respuestas_medico_consulta rmc on r.id=rmc.id_respuesta 
+            left join usuarios u on u.id=rmc.id_medico
+            left join consultas c on c.id=rmc.id_consulta and c.id=rpc.id_consulta
+            where rpc.id_consulta=:p1 or rmc.id_consulta=:p2
+            order by r.fecha desc ";
         $stmt2 = $conn->prepare($sql2);
         $stmt2->execute(['p1' => $id, 'p2' => $id]);
 
