@@ -72,6 +72,39 @@ class HistorialController extends FOSRestController
     }
 
     /**
+     * @Route("/api/medic/user/{user}/historical/{id}", name="show_historical")
+     * @param $id
+     * @param $user
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getHistoricalMedic($id,$user)
+    {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT h.id,h.causa,h.diagnostico,h.notas,h.fecha,CONCAT(u.nombre," " ,u.apellido)as nombre_medico FROM historial h inner join pacientes p on h.id_paciente=p.id_usuario inner join usuarios u on h.id_medico=u.id WHERE p.id_usuario=:id and h.id=:idhistorical';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $user, 'idhistorical' => $id]);
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetch())));
+
+    }
+
+    /**
+     * @Route("/api/medic/user/{user}/historical")
+     * @param $user
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getHistoricalsMedic($user)
+    {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT h.id,h.causa,h.diagnostico,h.notas,h.fecha,CONCAT(u.nombre," " ,u.apellido)as nombre_medico, c.nombre as centro_salud,c.ciudad as direccion_centro FROM historial h inner join pacientes p on h.id_paciente=p.id_usuario inner join usuarios u on h.id_medico=u.id inner join medicos m on m.id_usuario=u.id inner join centros c on c.id=m.id_centro WHERE p.id_usuario=:id';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' =>$user]);
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchall())));
+
+    }
+
+    /**
      * @param $status
      * @param $message
      * @param $type

@@ -82,6 +82,29 @@ class RecipeController extends FOSRestController
         return $this->templateJson(200, "", 1, $array)->setStatusCode(200);
 
     }
+
+    /**
+     * @Route("/api/medic/user/{user}/recipeshistorical/{id}")
+     * @param $id
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getRecipesHistoricalMedic($id,$user)
+    {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT r.* FROM recetas r inner join historial h on r.id_historial=h.id inner join pacientes p on h.id_paciente=p.id_usuario WHERE p.id_usuario=:id HAVING r.id_historial=:id_historial';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $user, 'id_historial' => $id]);
+        $array = $stmt->fetchall();
+        if ($array == null) {
+            return $this->templateJson(404, "No hay recetas", 1, "")->setStatusCode(404);
+
+        }
+
+
+        return $this->templateJson(200, "", 1, $array)->setStatusCode(200);
+
+    }
     /**
      * @param $status
      * @param $message

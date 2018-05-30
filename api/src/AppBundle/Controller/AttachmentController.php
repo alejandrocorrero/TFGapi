@@ -56,6 +56,22 @@ class AttachmentController extends FOSRestController
     }
 
     /**
+     * @Route("/api/medic/user/{user}/attachments")
+     * @param $user
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getAdjuntosMedic($user)
+    {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT a.* FROM adjuntos_pacientes ap inner join adjuntos a on ap.id_adjunto=a.id where ap.id_paciente=:id';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $user]);
+
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchAll())));
+    }
+
+    /**
      * @param $status
      * @param $message
      * @param $type

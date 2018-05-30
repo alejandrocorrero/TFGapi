@@ -256,6 +256,7 @@ class ConsultController extends FOSRestController
         $sql2 = "SELECT r.*,Concat(u.nombre,' ',u.apellido) nombre from respuestas r
             left join respuestas_paciente_consulta rpc on r.id=rpc.id_respuesta 
             left join respuestas_medico_consulta rmc on r.id=rmc.id_respuesta 
+
             left join usuarios u on u.id=rmc.id_medico
             left join consultas c on c.id=rmc.id_consulta and c.id=rpc.id_consulta
             where rpc.id_consulta=:p1 or rmc.id_consulta=:p2
@@ -274,20 +275,24 @@ class ConsultController extends FOSRestController
     {  /** @var $consult Consulta */
         $consult = $this->getDoctrine()->getManager()->getRepository(Consulta::class)->findOneBy(['id' => $id]);
         $conn = $this->getDoctrine()->getConnection();
+        $sql3 ="SELECT c.*,Concat(u.nombre,' ',u.apellido) nombre from consultas c inner join usuarios u on u.id=c.id_paciente where c.id=:p1";
+        $stmt3 = $conn->prepare($sql3);
+        $stmt3->execute(['p1' => $id]);
+
         $sql = "SELECT a.* from adjuntos a inner join adjuntos_consultas ac on ac.id_adjunto=a.id inner join consultas c on c.id=ac.id_Consulta where ac.id_consulta=:p1 and c.id_paciente=:p2 ";
         $stmt = $conn->prepare($sql);
         $stmt->execute(['p1' => $id, 'p2' => $consult->getIdPaciente()]);
         $sql2 = "SELECT r.*,Concat(u.nombre,' ',u.apellido) nombre from respuestas r
-left join respuestas_paciente_consulta rpc on r.id=rpc.id_respuesta 
-left join respuestas_medico_consulta rmc on r.id=rmc.id_respuesta 
-left join usuarios u on u.id=rmc.id_medico
-left join consultas c on c.id=rmc.id_consulta and c.id=rpc.id_consulta
-where rpc.id_consulta=:p1 or rmc.id_consulta=:p2
-order by r.fecha desc ";
+                left join respuestas_paciente_consulta rpc on r.id=rpc.id_respuesta 
+                left join respuestas_medico_consulta rmc on r.id=rmc.id_respuesta 
+                left join usuarios u on u.id=rmc.id_medico
+                left join consultas c on c.id=rmc.id_consulta and c.id=rpc.id_consulta
+                where rpc.id_consulta=:p1 or rmc.id_consulta=:p2
+                order by r.fecha desc ";
         $stmt2 = $conn->prepare($sql2);
         $stmt2->execute(['p1' => $id, 'p2' => $id]);
 
-        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => array("Consult" => $consult, "Attachments" => $stmt->fetchall(), "Respuestas" => $stmt2->fetchAll()))));
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => array("Consult" => $stmt3->fetch(), "Attachments" => $stmt->fetchall(), "Respuestas" => $stmt2->fetchAll()))));
     }
     /**
      * @Route("/api/patient/consults_specialty")
