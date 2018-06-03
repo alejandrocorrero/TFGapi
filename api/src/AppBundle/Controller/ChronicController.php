@@ -46,6 +46,13 @@ class ChronicController extends FOSRestController
      */
     public function getChronic()
     {
+        $conn = $this->getDoctrine()->getConnection();
+
+        $sql = 'SELECT e.* FROM enfermedades_cronicas e WHERE e.id_paciente=:id';
+        $stmt = $conn->prepare($sql);
+
+        $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+
         $id = $this->get('security.token_storage')->getToken()->getUser()->getId();
         $entityManager = $this->getDoctrine()->getManager();
         $chronic = $entityManager->getRepository(EnfermedadesCronicas::class)->findBy(['idPaciente' => $id]);
@@ -55,7 +62,7 @@ class ChronicController extends FOSRestController
 
         }
 
-        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $chronic)));
+        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchall())));
 
     }
     /**
