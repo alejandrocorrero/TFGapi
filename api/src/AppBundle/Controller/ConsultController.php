@@ -285,7 +285,7 @@ class ConsultController extends FOSRestController
         $sql2 = "SELECT r.*,Concat(u.nombre,' ',u.apellido) nombre from respuestas r
                 left join respuestas_paciente_consulta rpc on r.id=rpc.id_respuesta 
                 left join respuestas_medico_consulta rmc on r.id=rmc.id_respuesta 
-                left join usuarios u on u.id=rmc.id_medico
+                left join usuarios u on u.id=rpc.id_paciente
                 left join consultas c on c.id=rmc.id_consulta and c.id=rpc.id_consulta
                 where rpc.id_consulta=:p1 or rmc.id_consulta=:p2
                 order by r.fecha desc ";
