@@ -106,7 +106,9 @@ class CitationController extends FOSRestController
                 return $this->templateJson(404, "Parameter time is needed", 1, "");
             }
             $citation = new Cita();
-            $citation->setIdMedico($this->getDoctrine()->getManager()->getRepository(Paciente::class)->findOneBy(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()])->getIdMedico());
+            $citation->setIdMedico($this->getDoctrine()->getManager()->getRepository(Paciente::class)
+                ->findOneBy(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()])->getIdMedico());
+
             $citation->setDia(DateTime::createFromFormat("d/m/Y", $day));
             $citation->setHora(DateTime::createFromFormat("H:i:s", $time));
             $citation->setIdPaciente($this->get('security.token_storage')->getToken()->getUser()->getId());
@@ -115,7 +117,7 @@ class CitationController extends FOSRestController
         } catch (UniqueConstraintViolationException $e) {
             return $this->templateJson(404, "Cita ocupada", 1, "")->setStatusCode(200);
         }
-        return $this->templateJson(201, "Created", 1, "")->setStatusCode(201);
+        return $this->templateJson(201, "Creada con exito", 1, "")->setStatusCode(201);
     }
 
     /**

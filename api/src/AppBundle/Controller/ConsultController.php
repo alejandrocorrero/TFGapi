@@ -168,10 +168,33 @@ class ConsultController extends FOSRestController
 
     /**
      * @Route("/api/patient/consults")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function getConsults()
+    public function getConsults(Request $request)
     {
+        $offset = (int)$request->get("offset");
         $conn = $this->getDoctrine()->getConnection();
+
+        $sqlcount = 'SELECT COUNT(DISTINCT c.id)as c FROM consultas c 
+                inner join usuarios u on u.id =c.id_paciente
+                LEFT join consultas_medicos cm on cm.id_consulta=c.id 
+                LEFT join consultas_especialidades ce on ce.id_consulta=c.id  
+                LEFT join respuestas_paciente_consulta rpc on rpc.id_consulta=c.id 
+                LEFT join respuestas_medico_consulta rmc on rmc.id_consulta=c.id
+                left join usuarios u2 on u2.id=rmc.id_medico
+                left join (SELECT MAX(r.fecha) fecha , r.respuesta,r.leido,r.id from respuestas as r GROUP by r.id  order by fecha desc)  as r
+                on rpc.id_respuesta=r.id or rmc.id_respuesta=r.id
+                where c.id_paciente=:id';
+        $count = $conn->prepare($sqlcount);
+        $count->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+        $number = (int)$count->fetch()['c'];
+        if ($number == 0) {
+            return $this->templateJson(200, "", 1, array("count"=>$number,"rows"=>[]));
+        }
+
+
+
         $sql = 'SELECT c.*,Concat(u.nombre,\' \',u.apellido) nombre,Concat(u2.nombre,\' \',u2.apellido) nombre_respuesta,r.fecha fecharespuesta,r.respuesta,r.leido FROM consultas c 
                 inner join usuarios u on u.id =c.id_paciente
                 LEFT join consultas_medicos cm on cm.id_consulta=c.id 
@@ -183,11 +206,11 @@ class ConsultController extends FOSRestController
                 on rpc.id_respuesta=r.id or rmc.id_respuesta=r.id
                 where c.id_paciente=:id
                 GROUP by c.id  
-                ORDER BY greatest (c.fecha  ,ifnull( r.fecha,0)) desc';
+                ORDER BY greatest (c.fecha  ,ifnull( r.fecha,0)) desc limit 20 offset '.$offset;
         $stmt = $conn->prepare($sql);
         $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+        return $this->templateJson(200,"",1,array("count"=>$number,"rows"=>$stmt->fetchAll()));
 
-        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchAll())));
     }
 
     /**

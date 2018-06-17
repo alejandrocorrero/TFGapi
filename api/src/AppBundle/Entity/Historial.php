@@ -11,7 +11,7 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Receta
+ * Historial
  *
  * @ORM\Table("historial")
  * @ORM\Entity

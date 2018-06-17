@@ -43,16 +43,27 @@ class AttachmentController extends FOSRestController
 {
     /**
      * @Route("/api/patient/attachments")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function getAdjuntos()
+    public function getAdjuntos(Request $request)
     {
-        $conn = $this->getDoctrine()->getConnection();
 
-        $sql = 'SELECT a.* FROM adjuntos_pacientes ap inner join adjuntos a on ap.id_adjunto=a.id where ap.id_paciente=:id';
+        $offset = (int)$request->get("offset");
+
+        $conn = $this->getDoctrine()->getConnection();
+        $sqlcount = 'SELECT COUNT(*)as c FROM adjuntos_pacientes ap inner join adjuntos a on ap.id_adjunto=a.id where ap.id_paciente=:id';
+        $count = $conn->prepare($sqlcount);
+        $count->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+        $number = (int)$count->fetch()['c'];
+        if ($number == 0) {
+            return $this->templateJson(200, "", 1, array("count"=>$number,"rows"=>[]));
+        }
+
+        $sql = 'SELECT a.* FROM adjuntos_pacientes ap inner join adjuntos a on ap.id_adjunto=a.id where ap.id_paciente=:id LIMIT 20 OFFSET '.$offset;
         $stmt = $conn->prepare($sql);
         $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
-
-        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchAll())));
+        return $this->templateJson(200, "", 1, array("count" => $number, "rows" => $stmt->fetchAll()));
     }
 
     /**
@@ -80,6 +91,6 @@ class AttachmentController extends FOSRestController
      */
     public function templateJson($status, $message, $type, $data)
     {
-        return $this->handleView($this->view(array("status" => $status, "message" => $message, "type" => $type, "data" => $data)));
+        return $this->handleView($this->view(array("status" => $status, "message" => $message, "type" => $type, "data" => $data)))->setStatusCode($status);
     }
 }
