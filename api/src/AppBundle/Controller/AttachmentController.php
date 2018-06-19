@@ -57,10 +57,10 @@ class AttachmentController extends FOSRestController
         $count->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
         $number = (int)$count->fetch()['c'];
         if ($number == 0) {
-            return $this->templateJson(200, "", 1, array("count"=>$number,"rows"=>[]));
+            return $this->templateJson(200, "", 1, array("count" => $number, "rows" => []));
         }
 
-        $sql = 'SELECT a.* FROM adjuntos_pacientes ap inner join adjuntos a on ap.id_adjunto=a.id where ap.id_paciente=:id LIMIT 20 OFFSET '.$offset;
+        $sql = 'SELECT a.* FROM adjuntos_pacientes ap inner join adjuntos a on ap.id_adjunto=a.id where ap.id_paciente=:id LIMIT 20 OFFSET ' . $offset;
         $stmt = $conn->prepare($sql);
         $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
         return $this->templateJson(200, "", 1, array("count" => $number, "rows" => $stmt->fetchAll()));
@@ -69,17 +69,26 @@ class AttachmentController extends FOSRestController
     /**
      * @Route("/api/medic/user/{user}/attachments")
      * @param $user
+     * @param Request $request
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function getAdjuntosMedic($user)
+    public function getAdjuntosMedic($user, Request $request)
     {
-        $conn = $this->getDoctrine()->getConnection();
+        $offset = (int)$request->get("offset");
 
-        $sql = 'SELECT a.* FROM adjuntos_pacientes ap inner join adjuntos a on ap.id_adjunto=a.id where ap.id_paciente=:id';
+        $conn = $this->getDoctrine()->getConnection();
+        $sqlcount = 'SELECT COUNT(*)as c FROM adjuntos_pacientes ap inner join adjuntos a on ap.id_adjunto=a.id where ap.id_paciente=:id';
+        $count = $conn->prepare($sqlcount);
+        $count->execute(['id' => $user]);
+        $number = (int)$count->fetch()['c'];
+        if ($number == 0) {
+            return $this->templateJson(200, "", 1, array("count" => $number, "rows" => []));
+        }
+
+        $sql = 'SELECT a.* FROM adjuntos_pacientes ap inner join adjuntos a on ap.id_adjunto=a.id where ap.id_paciente=:id LIMIT 20 OFFSET ' . $offset;
         $stmt = $conn->prepare($sql);
         $stmt->execute(['id' => $user]);
-
-        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchAll())));
+        return $this->templateJson(200, "", 1, array("count" => $number, "rows" => $stmt->fetchAll()));
     }
 
     /**

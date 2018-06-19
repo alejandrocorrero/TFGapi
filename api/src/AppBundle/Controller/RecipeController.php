@@ -51,10 +51,7 @@ class RecipeController extends FOSRestController
         $stmt = $conn->prepare($sql);
         $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
         $result = $stmt->fetchall();
-        if ($result == null) {
-            return $this->handleView($this->view(array("status" => 404, "message" => "No hay recetas", "type" => 1, "data" => [])));
 
-        }
 
         return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $result)));
 

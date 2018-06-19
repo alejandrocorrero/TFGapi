@@ -59,15 +59,28 @@ class HistorialController extends FOSRestController
 
     /**
      * @Route("/api/patient/historical")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function getHistoricals()
+    public function getHistoricals(Request $request)
     {
-        $conn = $this->getDoctrine()->getConnection();
 
-        $sql = 'SELECT h.id,h.causa,h.diagnostico,h.notas,h.fecha,CONCAT(u.nombre," " ,u.apellido)as nombre_medico, c.nombre as centro_salud,c.ciudad as direccion_centro FROM historial h inner join pacientes p on h.id_paciente=p.id_usuario inner join usuarios u on h.id_medico=u.id inner join medicos m on m.id_usuario=u.id inner join centros c on c.id=m.id_centro WHERE p.id_usuario=:id';
+        $offset = (int)$request->get("offset");
+        $conn = $this->getDoctrine()->getConnection();
+        $sql2 = 'SELECT COUNT(*) as c FROM historial h inner join pacientes p on h.id_paciente=p.id_usuario inner join usuarios u on h.id_medico=u.id inner join medicos m on m.id_usuario=u.id inner join centros c on c.id=m.id_centro WHERE p.id_usuario=:id ';
+        $count = $conn->prepare($sql2);
+        $count->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+        $number = (int)$count->fetch()['c'];
+        if ($number == 0) {
+            return $this->templateJson(200, "", 1, array("count" => $number, "rows" => []));
+        }
+
+
+        $sql = 'SELECT h.id,h.causa,h.diagnostico,h.notas,h.fecha,CONCAT(u.nombre," " ,u.apellido)as nombre_medico, c.nombre as centro_salud,c.ciudad as direccion_centro FROM historial h inner join pacientes p on h.id_paciente=p.id_usuario inner join usuarios u on h.id_medico=u.id inner join medicos m on m.id_usuario=u.id inner join centros c on c.id=m.id_centro WHERE p.id_usuario=:id limit 20 offset ' . $offset;
         $stmt = $conn->prepare($sql);
         $stmt->execute(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
-        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchall())));
+        return $this->templateJson(200, "", 1, array("count" => $number, "rows" => $stmt->fetchAll()));
+
 
     }
 
@@ -77,7 +90,7 @@ class HistorialController extends FOSRestController
      * @param $user
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function getHistoricalMedic($id,$user)
+    public function getHistoricalMedic($id, $user)
     {
         $conn = $this->getDoctrine()->getConnection();
 
@@ -91,17 +104,26 @@ class HistorialController extends FOSRestController
     /**
      * @Route("/api/medic/user/{user}/historical")
      * @param $user
+     * @param Request $request
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function getHistoricalsMedic($user)
+    public function getHistoricalsMedic($user, Request $request)
     {
+        $offset = (int)$request->get("offset");
         $conn = $this->getDoctrine()->getConnection();
+        $sql2 = 'SELECT COUNT(*) as c FROM historial h inner join pacientes p on h.id_paciente=p.id_usuario inner join usuarios u on h.id_medico=u.id inner join medicos m on m.id_usuario=u.id inner join centros c on c.id=m.id_centro WHERE p.id_usuario=:id limit 20 offset ' . $offset;
+        $count = $conn->prepare($sql2);
+        $count->execute(['id' => $user]);
+        $number = (int)$count->fetch()['c'];
+        if ($number == 0) {
+            return $this->templateJson(200, "", 1, array("count" => $number, "rows" => []));
+        }
 
-        $sql = 'SELECT h.id,h.causa,h.diagnostico,h.notas,h.fecha,CONCAT(u.nombre," " ,u.apellido)as nombre_medico, c.nombre as centro_salud,c.ciudad as direccion_centro FROM historial h inner join pacientes p on h.id_paciente=p.id_usuario inner join usuarios u on h.id_medico=u.id inner join medicos m on m.id_usuario=u.id inner join centros c on c.id=m.id_centro WHERE p.id_usuario=:id';
+
+        $sql = 'SELECT h.id,h.causa,h.diagnostico,h.notas,h.fecha,CONCAT(u.nombre," " ,u.apellido)as nombre_medico, c.nombre as centro_salud,c.ciudad as direccion_centro FROM historial h inner join pacientes p on h.id_paciente=p.id_usuario inner join usuarios u on h.id_medico=u.id inner join medicos m on m.id_usuario=u.id inner join centros c on c.id=m.id_centro WHERE p.id_usuario=:id limit 20 offset ' . $offset;
         $stmt = $conn->prepare($sql);
-        $stmt->execute(['id' =>$user]);
-        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchall())));
-
+        $stmt->execute(['id' => $user]);
+        return $this->templateJson(200, "", 1, array("count" => $number, "rows" => $stmt->fetchAll()));
     }
 
     /**

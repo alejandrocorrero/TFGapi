@@ -122,39 +122,89 @@ class EConsultController extends FOSRestController
 
     /**
      * @Route("/api/medic/econsultspecialty")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function getEConsultsSpecialty()
+    public function getEConsultsSpecialty(Request $request)
     {
+
+        $repository = $this->getDoctrine()->getRepository(Medico::class);
+
+        /** @var $medic Medico */
+        $medic = $repository->findOneBy(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+        $offset = (int)$request->get("offset");
         $conn = $this->getDoctrine()->getConnection();
-        $sql = 'SELECT e.*,Concat(u.nombre,\' \',u.apellido) nombre,Concat(u2.nombre,\' \',u2.apellido) nombre_respuesta,r.fecha fecharespuesta,r.respuesta,r.leido  from econsultas e 
-                    inner join usuarios u on u.id=e.id_medico
+
+        $sqlcount = 'SELECT COUNT(DISTINCT e.id) as c
+                from econsultas e 
+                    left join usuarios u on u.id=e.id_medico
                     LEFT join respuestas_medico_econsulta rme on rme.id_econsulta=e.id
-                    inner join usuarios u2 on u2.id=rme.id_medico
-                    inner join medicos m on m.id_usuario=rme.id_medico
+                    left join usuarios u2 on u2.id=rme.id_medico
+                    left join medicos m on m.id_usuario=rme.id_medico
+                    left join (SELECT MAX(r.fecha) fecha , r.respuesta,r.leido,r.id 
+                               from respuestas
+                               as r GROUP by r.id  order by fecha desc)  as r
+                    on rme.id_respuesta=r.id
+                    where e.id_especialidad=:p1
+            ';
+        $count = $conn->prepare($sqlcount);
+        $count->execute(['p1' => $medic->getEspecialidad()]);
+        $number = (int)$count->fetch()['c'];
+        if ($number == 0) {
+            return $this->templateJson(200, "", 1, array("count" => $number, "rows" => []));
+        }
+
+        $sql = 'SELECT e.*,Concat(u.nombre,\' \',u.apellido) nombre,Concat(u2.nombre,\' \',u2.apellido) nombre_respuesta,r.fecha fecharespuesta,r.respuesta,r.leido  from econsultas e 
+                    left join usuarios u on u.id=e.id_medico
+                    LEFT join respuestas_medico_econsulta rme on rme.id_econsulta=e.id
+                    left join usuarios u2 on u2.id=rme.id_medico
+                    left join medicos m on m.id_usuario=rme.id_medico
                     left join (SELECT MAX(r.fecha) fecha , r.respuesta,r.leido,r.id 
                                from respuestas
                                as r GROUP by r.id  order by fecha desc)  as r
                     on rme.id_respuesta=r.id
                     where e.id_especialidad=:p1
                     GROUP by e.id
-                    ORDER BY greatest (e.fecha  ,ifnull( r.fecha,0)) desc';
+                    ORDER BY greatest (e.fecha  ,ifnull( r.fecha,0)) desc limit 20 offset ' . $offset;
         $stmt = $conn->prepare($sql);
-        $repository = $this->getDoctrine()->getRepository(Medico::class);
-
-        /** @var $medic Medico */
-        $medic = $repository->findOneBy(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
-
         $stmt->execute(['p1' => $medic->getEspecialidad()]);
+        return $this->templateJson(200, "", 1, array("count" => $number, "rows" => $stmt->fetchAll()));
 
-        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchAll())));
+
     }
 
     /**
      * @Route("/api/medic/econsults")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function getEConsults()
+    public function getEConsults(Request $request)
     {
+        $repository = $this->getDoctrine()->getRepository(Medico::class);
+
+        /** @var $medic Medico */
+        $medic = $repository->findOneBy(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
+        $offset = (int)$request->get("offset");
         $conn = $this->getDoctrine()->getConnection();
+
+        $sqlcount = 'SELECT COUNT(DISTINCT e.id) as c
+                from econsultas e 
+                    left join usuarios u on u.id=e.id_medico
+            LEFT join medicos m on m.id_usuario=e.id_medico
+            LEFT join respuestas_medico_econsulta rme on rme.id_econsulta=e.id
+             LEFT join usuarios u2 on u2.id=rme.id_medico
+            left join (SELECT MAX(r.fecha) fecha , r.respuesta,r.leido,r.id from respuestas
+                       as r GROUP by r.id  order by fecha desc)  as r
+            on rme.id_respuesta=r.id
+            where m.id_usuario=:p1
+            ';
+        $count = $conn->prepare($sqlcount);
+        $count->execute(['p1' => $medic->getId()]);
+        $number = (int)$count->fetch()['c'];
+        if ($number == 0) {
+            return $this->templateJson(200, "", 1, array("count" => $number, "rows" => []));
+        }
+
         $sql = 'SELECT e.*,Concat(u.nombre,\' \',u.apellido) nombre,Concat(u2.nombre,\' \',u2.apellido) nombre_respuesta,r.fecha fecharespuesta,r.respuesta,r.leido  from econsultas e 
                     left join usuarios u on u.id=e.id_medico
             LEFT join medicos m on m.id_usuario=e.id_medico
@@ -163,18 +213,12 @@ class EConsultController extends FOSRestController
             left join (SELECT MAX(r.fecha) fecha , r.respuesta,r.leido,r.id from respuestas
                        as r GROUP by r.id  order by fecha desc)  as r
             on rme.id_respuesta=r.id
-            where m.id_usuario=18
+            where m.id_usuario=:p1
             GROUP by e.id
-            ORDER BY greatest (e.fecha  ,ifnull( r.fecha,0)) desc';
+            ORDER BY greatest (e.fecha  ,ifnull( r.fecha,0)) desc limit 20 offset ' . $offset;
         $stmt = $conn->prepare($sql);
-        $repository = $this->getDoctrine()->getRepository(Medico::class);
-
-        /** @var $medic Medico */
-        $medic = $repository->findOneBy(['id' => $this->get('security.token_storage')->getToken()->getUser()->getId()]);
-
         $stmt->execute(['p1' => $medic->getId()]);
-
-        return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $stmt->fetchAll())));
+        return $this->templateJson(200, "", 1, array("count" => $number, "rows" => $stmt->fetchAll()));
     }
 
     /**
