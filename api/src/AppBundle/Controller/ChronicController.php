@@ -70,14 +70,9 @@ class ChronicController extends FOSRestController
      */
     public function getChronicMedic($user)
     {
-        $id = $this->get('security.token_storage')->getToken()->getUser()->getId();
         $entityManager = $this->getDoctrine()->getManager();
         $chronic = $entityManager->getRepository(EnfermedadesCronicas::class)->findBy(['idPaciente' => $user]);
 
-        if (!$chronic) {
-            return $this->handleView($this->view(array("status" => 404, "message" => "No existe", "type" => 1, "data" => [])));
-
-        }
 
         return $this->handleView($this->view(array("status" => 200, "message" => "", "type" => 1, "data" => $chronic)));
 

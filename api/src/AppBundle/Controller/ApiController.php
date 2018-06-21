@@ -195,25 +195,25 @@ class ApiController extends FOSRestController
 
         $user = new user();
         $user->setPlainPassword("1234");
-        $user->setUsername("12345678M");
-        $user->setUsernameCanonical("12345678m");
-        $user->setNombre("Medico1");
-        $user->setApellido("Medico2");
-        $user->setSuperAdmin(true);
-        $user->setDireccion("test");
+        $user->setUsername("12345678c");
+        $user->setUsernameCanonical("12345678C");
+        $user->setNombre("Pepe3");
+        $user->setApellido("Romero3");
+        $user->setSuperAdmin(false);
+        $user->setDireccion("Direccion");
         $user->setFechaNacimiento((new \DateTime)->setDate(1995, 06, 16));
-        $user->setTelefono(123456789);
-        $user->setMovil(61626261);
+        $user->setTelefono(123455778);
+        $user->setMovil(61626661);
         $user->setPais("ESPAÑA");
         $user->setSexo("Hombre");
-        $user->setEmail("medico1");
-        $user->setEmailCanonical("medico2");
+        $user->setEmail("peperomero3@email.com");
+        $user->setEmailCanonical("peperomer3o@email.com");
         $user->setEstadoCivil("soltero");
-        $user->setOcupacion("Medico");
+        $user->setOcupacion("Cirujano");
         $user->setNotas("naada");
         $user->setPath("path");
         $user->setEnabled(true);
-        $user->setRoles((array('ROLE_MEDICO')));
+        $user->setRoles((array('ROLE_PACIENTE')));
         // tell Doctrine you want to (eventually) save the Product (no queries yet)
         $entityManager->persist($user);
 
